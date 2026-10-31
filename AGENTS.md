@@ -61,6 +61,7 @@ ruff check .
 ruff format --check .
 mypy src
 python -m airlock scan --mode full             # self-scan; must report no HIGH findings
+python scripts/record_dependabot_bump.py         # helper for Dependabot PRs: creates docs/changes/ record and regenerates ROADMAP.md
 scripts/check_roadmap_touched.sh origin/main   # the PR adds a docs/changes/ record, regenerates ROADMAP.md, deletes no landed record
 python scripts/roadmap_progress.py --check     # the generated regions match the tasks and the records
 ```
@@ -101,6 +102,7 @@ If a command does not exist yet, say so in the PR instead of silently skipping i
 - Never commit to the default branch, never force-push, never rewrite shared history.
 - PR description: task IDs, what changed, how it was tested, which docs were updated, and an explicit line confirming the change was recorded under `docs/changes/` and `ROADMAP.md` regenerated from it.
 - Do not auto-merge. Do not bump the pinned SHA of a GitHub Action without reading the diff.
+- Dependabot pull requests: Dependabot PRs for Actions and pip are ordinary pull requests and must pass the roadmap gate per Decision D-07. Before merging, check out the PR branch, review the diff, and run `python scripts/record_dependabot_bump.py` to synthesize the `docs/changes/` record, recompile `requirements-ci.txt` (if dev bounds changed), and regenerate `ROADMAP.md`. Commit what it writes to the PR branch.
 
 ## 10. When to stop and ask the owner
 

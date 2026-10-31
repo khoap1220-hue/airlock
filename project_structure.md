@@ -71,6 +71,7 @@ airlock/
     rule_reference.py              # generates and checks RULES.md from rules/builtin/*.toml                 (5.2)
     check_roadmap_touched.sh       # CI gate: the PR adds a docs/changes/ record                  (1.9, 1.15)
     roadmap_progress.py            # generates the table, changelog and timestamp; --check        (1.9, 1.15)
+    record_dependabot_bump.py      # records Dependabot bumps under docs/changes/ and regenerates ROADMAP.md (1.6)
     create_wave_issues.sh          # publishes docs/wave/issues; dry run unless --apply                      (1.14)
 
   docs/
@@ -119,7 +120,7 @@ Changes here are security-relevant. They need CODEOWNERS review and extra care f
 | `rules/` | Detection logic |
 | `action.yml`, `.github/workflows/` | Supply chain of the tool itself |
 | `airlock.toml`, `wasm-manifest.toml` | Dogfood policy; a bad edit disables checks |
-| `scripts/` | The roadmap gate and the site generator |
+| `scripts/` | The roadmap gate, the Dependabot bump recorder, and the site generator |
 | `.github/CODEOWNERS` | Review enforcement |
 
 ## 3. Import rules (dependency direction)
@@ -188,4 +189,5 @@ If a code change contradicts a doc, fix the doc in the same PR. If a doc stateme
 
 - `RULES.md` is generated from `rules/builtin/*.toml` by `scripts/rule_reference.py` through `airlock.rules.load_rules` (task 5.2, decision D-10). Do not edit generated output by hand; `python scripts/rule_reference.py --check` runs inside the unit suite (`tests/unit/test_rule_reference.py`) in the `checks` CI job and fails a stale copy.
 - The site's rule reference and hero counts are generated from `rules/builtin/*.toml` by `scripts/build_site.py`, between the `RULES` and `TELEMETRY` markers; `site/data/rules.json` is written at the same time. Run the script after a rule change and commit the result. `--check` fails a stale page, and the Pages workflow and the unit suite both run it (8.6).
+- `scripts/record_dependabot_bump.py` is the helper that records a Dependabot dependency bump under `docs/changes/`, updates `requirements-ci.txt` (if dev dependencies changed), and regenerates `ROADMAP.md` before merge (task 1.6, decision D-07).
 - Three regions of `ROADMAP.md` are generated: the progress table from the task lines, the changelog in section 9 from `docs/changes/`, and the `Last updated` line from the newest record. Run `python scripts/roadmap_progress.py` after ticking a task or adding a record, and `--check` fails any region that disagrees with its source. Do not edit those regions by hand; the task lines and the records are what you edit.

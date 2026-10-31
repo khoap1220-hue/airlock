@@ -10,7 +10,9 @@ the committed changelog cannot drift from the records it is built from or lose a
 from __future__ import annotations
 
 import re
+import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -68,7 +70,13 @@ CURRENT = (
 
 
 def run(program: str, *args: str, cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
-    return subprocess.run([program, *args], capture_output=True, text=True, check=False, cwd=cwd)
+    # Resolve python3 to sys.executable for cross-platform test runner portability
+    cmd = [sys.executable if program in ("python", "python3") else program, *args]
+    if cmd[0] == "sh" and shutil.which("sh") is None:
+        git_sh = Path(r"C:\Program Files\Git\bin\sh.exe")
+        if git_sh.exists():
+            cmd[0] = str(git_sh)
+    return subprocess.run(cmd, capture_output=True, text=True, check=False, cwd=cwd)
 
 
 def base_ref(root: Path) -> str:
@@ -590,3 +598,193 @@ class TestChangelogGeneration:
         assert links == sorted(names, reverse=True)
         stamps = [row.split("|")[1].strip() for row in rows]
         assert stamps == sorted(stamps, key=_sortable, reverse=True)
+
+
+RECORD_SCRIPT = REPO_ROOT / "scripts" / "record_dependabot_bump.py"
+
+
+class TestRecordDependabotBump:
+    def test_record_dependabot_bump_pip_group(self, branch_repo: Path) -> None:
+        """A dev dependency bump in pyproject.toml is recorded, satisfying both gates."""
+        pyproject = branch_repo / "pyproject.toml"
+        pyproject.write_text(
+            '[project]\nname = "airlock"\nversion = "0.1.0"\ndependencies = []\n\n'
+            '[project.optional-dependencies]\n'
+            'dev = [\n    "pytest>=8.0.0",\n    "ruff>=0.1.0",\n    "mypy>=1.0.0",\n]\n',
+            encoding="utf-8",
+        )
+        roadmap = branch_repo / "ROADMAP.md"
+        roadmap.write_text(roadmap_text(), encoding="utf-8")
+        (branch_repo / "scripts").mkdir(parents=True, exist_ok=True)
+        (branch_repo / "scripts" / "roadmap_progress.py").write_text(
+            PROGRESS.read_text(encoding="utf-8"), encoding="utf-8"
+        )
+        (branch_repo / "scripts" / "check_roadmap_touched.sh").write_text(
+            TOUCHED.read_text(encoding="utf-8"), encoding="utf-8"
+        )
+        (branch_repo / "scripts" / "record_dependabot_bump.py").write_text(
+            RECORD_SCRIPT.read_text(encoding="utf-8"), encoding="utf-8"
+        )
+        git(branch_repo, "add", "-A")
+        git(branch_repo, "commit", "-q", "-m", "setup dev dependencies")
+
+        # Simulate Dependabot bump on PR branch
+        git(branch_repo, "checkout", "-q", "-b", "dependabot/pip/python-group")
+        pyproject.write_text(
+            '[project]\nname = "airlock"\nversion = "0.1.0"\ndependencies = []\n\n'
+            '[project.optional-dependencies]\n'
+            'dev = [\n    "pytest>=9.2.0",\n    "ruff>=0.17.3",\n    "mypy>=2.4.0",\n]\n',
+            encoding="utf-8",
+        )
+        git(branch_repo, "add", "pyproject.toml")
+        git(branch_repo, "commit", "-q", "-m", "chore(deps): bump python group")
+
+        # Prior to running helper, roadmap gate fails
+        gate_before = run("sh", str(branch_repo / "scripts" / "check_roadmap_touched.sh"), "task", cwd=branch_repo)
+        assert gate_before.returncode == 1
+
+        # Run record_dependabot_bump.py with fixed date
+        record_res = run(
+            "python3",
+            str(branch_repo / "scripts" / "record_dependabot_bump.py"),
+            "--base",
+            "task",
+            "--date",
+            "2026-10-31 12:00",
+            "--skip-uv",
+            cwd=branch_repo,
+        )
+        assert record_res.returncode == 0, record_res.stdout + record_res.stderr
+
+        # Verify change record was created
+        record_file = branch_repo / "docs" / "changes" / "2026-10-31-1200-dependabot-python-group.md"
+        assert record_file.is_file()
+        content = record_file.read_text(encoding="utf-8")
+        assert "tasks: 1.6" in content
+        assert "pytest" in content and "ruff" in content and "mypy" in content
+
+        # Verify roadmap_progress.py --check passes
+        check_res = run(
+            "python3",
+            str(branch_repo / "scripts" / "roadmap_progress.py"),
+            "--check",
+            str(roadmap),
+            cwd=branch_repo,
+        )
+        assert check_res.returncode == 0, check_res.stdout + check_res.stderr
+
+        # Commit and verify check_roadmap_touched.sh passes
+        git(branch_repo, "add", "-A")
+        git(branch_repo, "commit", "-q", "-m", "chore(deps): record dependabot bump")
+        gate_after = run("sh", str(branch_repo / "scripts" / "check_roadmap_touched.sh"), "task", cwd=branch_repo)
+        assert gate_after.returncode == 0, gate_after.stdout + gate_after.stderr
+
+    def test_record_dependabot_bump_actions_group(self, branch_repo: Path) -> None:
+        """An action pin bump in .github/workflows/ is recorded and satisfies both gates."""
+        wf_dir = branch_repo / ".github" / "workflows"
+        wf_dir.mkdir(parents=True, exist_ok=True)
+        ci_wf = wf_dir / "ci.yml"
+        ci_wf.write_text(
+            "name: CI\njobs:\n  checks:\n    runs-on: ubuntu-latest\n    steps:\n"
+            "      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1\n",
+            encoding="utf-8",
+        )
+        roadmap = branch_repo / "ROADMAP.md"
+        roadmap.write_text(roadmap_text(), encoding="utf-8")
+        (branch_repo / "scripts").mkdir(parents=True, exist_ok=True)
+        (branch_repo / "scripts" / "roadmap_progress.py").write_text(
+            PROGRESS.read_text(encoding="utf-8"), encoding="utf-8"
+        )
+        (branch_repo / "scripts" / "check_roadmap_touched.sh").write_text(
+            TOUCHED.read_text(encoding="utf-8"), encoding="utf-8"
+        )
+        (branch_repo / "scripts" / "record_dependabot_bump.py").write_text(
+            RECORD_SCRIPT.read_text(encoding="utf-8"), encoding="utf-8"
+        )
+        git(branch_repo, "add", "-A")
+        git(branch_repo, "commit", "-q", "-m", "setup workflow")
+
+        # Simulate Dependabot bump on PR branch
+        git(branch_repo, "checkout", "-q", "-b", "dependabot/github-actions/actions-group")
+        ci_wf.write_text(
+            "name: CI\njobs:\n  checks:\n    runs-on: ubuntu-latest\n    steps:\n"
+            "      - uses: actions/checkout@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0\n",
+            encoding="utf-8",
+        )
+        git(branch_repo, "add", str(ci_wf))
+        git(branch_repo, "commit", "-q", "-m", "chore(deps): bump actions group")
+
+        record_res = run(
+            "python3",
+            str(branch_repo / "scripts" / "record_dependabot_bump.py"),
+            "--base",
+            "task",
+            "--date",
+            "2026-10-31 12:05",
+            cwd=branch_repo,
+        )
+        assert record_res.returncode == 0, record_res.stdout + record_res.stderr
+
+        record_file = branch_repo / "docs" / "changes" / "2026-10-31-1205-dependabot-actions-group.md"
+        assert record_file.is_file()
+        content = record_file.read_text(encoding="utf-8")
+        assert "tasks: 1.6" in content
+        assert "actions/checkout" in content
+
+        git(branch_repo, "add", "-A")
+        git(branch_repo, "commit", "-q", "-m", "chore(deps): record dependabot bump")
+        assert run("sh", str(branch_repo / "scripts" / "check_roadmap_touched.sh"), "task", cwd=branch_repo).returncode == 0
+
+    def test_record_dependabot_bump_fails_if_no_dependencies_changed(self, branch_repo: Path) -> None:
+        """Running the helper on a diff that touches no dependencies fails cleanly."""
+        (branch_repo / "scripts").mkdir(parents=True, exist_ok=True)
+        (branch_repo / "scripts" / "record_dependabot_bump.py").write_text(
+            RECORD_SCRIPT.read_text(encoding="utf-8"), encoding="utf-8"
+        )
+        (branch_repo / "other.txt").write_text("irrelevant change\n", encoding="utf-8")
+        git(branch_repo, "add", "-A")
+        git(branch_repo, "commit", "-q", "-m", "non-dep change")
+
+        res = run(
+            "python3",
+            str(branch_repo / "scripts" / "record_dependabot_bump.py"),
+            "--base",
+            "main",
+            cwd=branch_repo,
+        )
+        assert res.returncode == 1
+        assert "neither pyproject.toml nor" in (res.stdout + res.stderr)
+
+    def test_record_dependabot_bump_dry_run_does_not_modify_disk(self, branch_repo: Path) -> None:
+        """Dry run prints summary and exits 0 without writing files."""
+        pyproject = branch_repo / "pyproject.toml"
+        pyproject.write_text(
+            '[project]\nname = "airlock"\nversion = "0.1.0"\ndependencies = []\n\n'
+            '[project.optional-dependencies]\n'
+            'dev = [\n    "pytest>=8.0.0",\n]\n',
+            encoding="utf-8",
+        )
+        git(branch_repo, "add", "pyproject.toml")
+        git(branch_repo, "commit", "-q", "-m", "setup")
+        pyproject.write_text(
+            '[project]\nname = "airlock"\nversion = "0.1.0"\ndependencies = []\n\n'
+            '[project.optional-dependencies]\n'
+            'dev = [\n    "pytest>=9.2.0",\n]\n',
+            encoding="utf-8",
+        )
+        (branch_repo / "scripts").mkdir(parents=True, exist_ok=True)
+        (branch_repo / "scripts" / "record_dependabot_bump.py").write_text(
+            RECORD_SCRIPT.read_text(encoding="utf-8"), encoding="utf-8"
+        )
+
+        res = run(
+            "python3",
+            str(branch_repo / "scripts" / "record_dependabot_bump.py"),
+            "--base",
+            "main",
+            "--dry-run",
+            cwd=branch_repo,
+        )
+        assert res.returncode == 0
+        assert "[dry-run]" in res.stdout
+        assert not (branch_repo / "docs" / "changes" / "2026-10-31-1200-dependabot-python-group.md").exists()

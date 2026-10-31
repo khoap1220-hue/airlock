@@ -6,6 +6,8 @@
 #
 # Dependabot pull requests are ordinary pull requests. They need a record under `docs/changes/`
 # and a regenerated `ROADMAP.md`, and the roadmap gate will fail them if either is missing.
+# Run `python scripts/record_dependabot_bump.py` on the PR branch to generate the change record,
+# update `requirements-ci.txt` (if dev deps changed), and regenerate `ROADMAP.md`.
 
 version: 2
 updates:

@@ -27,6 +27,17 @@ same bar. The design lives in [`PRD.md`](PRD.md), [`ARCHITECTURE.md`](ARCHITECTU
    for `site/`) runs both scripts with `--check` and fails a stale reference or page, because both
    are generated from the rule data rather than written by hand.
 
+## Dependabot pull requests
+
+Dependabot pull requests (Actions and pip dev tools) are ordinary pull requests. Per Decision D-07, the roadmap gate has no exemptions, including dependency bumps. Because Dependabot cannot author a `docs/changes/` record or regenerate `ROADMAP.md`, its initial pull request run fails the roadmap gate by design.
+
+To merge a Dependabot pull request:
+
+1. Review the diff per `AGENTS.md` 9. Never auto-merge, and never bump an Action SHA without reading the diff.
+2. Check out the pull request branch.
+3. Run `python scripts/record_dependabot_bump.py`. The script inspects the diff against the base branch, writes a compliant change record under `docs/changes/YYYY-MM-DD-HHMM-dependabot-<group>.md`, recompiles `requirements-ci.txt` with `uv pip compile` if dev dependencies changed, and regenerates `ROADMAP.md` via `python scripts/roadmap_progress.py`.
+4. Commit the generated files to the branch. The roadmap gate and CI checks will then pass.
+
 ## Branches and commits
 
 Branch per task as `feat/<task-id>-<slug>`. Conventional Commits, subject under 72
