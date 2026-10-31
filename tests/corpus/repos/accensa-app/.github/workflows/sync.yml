@@ -1,0 +1,105 @@
+name: Trigger Indexer Sync
+
+# Vercel Cron on the Hobby plan is limited to one run per day.
+# GitHub Actions cron schedules on shared runners drop high-frequency triggers.
+# To achieve a reliable 5-minute interval, this workflow triggers hourly
+# and loops internally with a sleep, keeping the runner alive.
+#
+# Required repository secrets:
+#   SYNC_URL      https://accensa-dashboard.vercel.app/api/sync
+#   CRON_SECRET   must match the CRON_SECRET set on the Vercel project
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 * * * *'
+
+# Never let two syncs overlap; the later one wins.
+concurrency:
+  group: indexer-sync
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      # A green run used to prove only that something answered 200. On
+      # 2026-08-06 the route was replaced by a stub that returned
+      # {"success":true} and indexed nothing, and this workflow reported
+      # success for four days while the ledger cursor stood still. These two
+      # checks are what that costs: the endpoint must reject an unauthenticated
+      # caller, and every reply must carry the cursor a real sync commits.
+      - name: Check the endpoint is authenticated
+        env:
+          SYNC_URL: ${{ secrets.SYNC_URL }}
+        run: |
+          if [ -z "$SYNC_URL" ]; then
+            echo "SYNC_URL secret is not set"; exit 1
+          fi
+
+          code=$(curl -sS --max-time 60 -o /dev/null -w '%{http_code}' "$SYNC_URL")
+          if [ "$code" != "401" ]; then
+            echo "::error::Unauthenticated GET returned HTTP $code, expected 401." \
+                 "CRON_SECRET is not being enforced."
+            exit 1
+          fi
+          echo "Unauthenticated GET correctly rejected with 401."
+
+      - name: Call sync endpoint in a loop
+        env:
+          SYNC_URL: ${{ secrets.SYNC_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$SYNC_URL" ]; then
+            echo "SYNC_URL secret is not set"; exit 1
+          fi
+
+          # Run for 55 minutes to allow 5 minutes for the next hourly job to start
+          END_TIME=$(( $(date +%s) + 3300 ))
+
+          while [ $(date +%s) -lt $END_TIME ]; do
+            echo "Triggering sync at $(date)..."
+            response=$(curl -sS --max-time 120 -w '\n%{http_code}' \
+              -H "Authorization: Bearer $CRON_SECRET" "$SYNC_URL" || echo "curl failed")
+            
+            body=$(printf '%s' "$response" | sed '$d')
+            code=$(printf '%s' "$response" | tail -n1)
+
+            echo "HTTP $code"
+            echo "$body"
+
+            if [ "$code" != "200" ]; then
+              echo "::warning::Sync failed with HTTP $code"
+            elif printf '%s' "$body" | grep -q '"success":false'; then
+              echo "::warning::Sync reported failure"
+            elif printf '%s' "$body" | grep -q '"cooldown":true'; then
+              echo "Skipped: a sync ran within the cooldown window."
+            elif ! printf '%s' "$body" | grep -q '"syncedTo"'; then
+              # Not a transient fault. Whatever is answering is not the indexer,
+              # so there is nothing to be gained by polling it for another hour.
+              echo "::error::Reply carries no syncedTo cursor, so no indexing took place." \
+                   "The /api/sync route is not running the indexer."
+              exit 1
+            elif printf '%s' "$body" | grep -q '"drained":false'; then
+              echo "::warning::Incomplete sync: paging stopped against the time budget."
+            fi
+
+            # Ledgers the RPC no longer retains. Not recoverable by any later
+            # run, so it is reported even when the sync itself was healthy.
+            if printf '%s' "$body" | grep -qE '"skippedLedgers":[1-9]'; then
+              skipped=$(printf '%s' "$body" | grep -oE '"skippedLedgers":[0-9]+' | cut -d: -f2)
+              echo "::warning::Cursor fell outside RPC retention; $skipped ledgers skipped."
+            fi
+
+            echo "Delivering queued payment webhooks..."
+            webhook_url="${SYNC_URL%/sync}/webhooks/deliver"
+            webhook_response=$(curl -sS --max-time 30 -w '\n%{http_code}' \
+              -H "Authorization: Bearer $CRON_SECRET" "$webhook_url" || echo "curl failed")
+            webhook_body=$(printf '%s' "$webhook_response" | sed '$d')
+            webhook_code=$(printf '%s' "$webhook_response" | tail -n1)
+            echo "webhook HTTP $webhook_code"
+            echo "$webhook_body"
+
+            echo "Sleeping for 5 minutes..."
+            sleep 300
+          done

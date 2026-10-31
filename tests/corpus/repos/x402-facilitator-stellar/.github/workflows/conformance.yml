@@ -1,0 +1,41 @@
+name: Conformance (upstream x402 e2e)
+
+# Deliberately a separate workflow from ci.yml.
+#
+# This job depends on testnet, on friendbot, and on a third-party repository at
+# whatever state its main branch is in today. Any of those can be down without
+# anything being wrong with this service. Wiring it into ci.yml would mean a
+# Stellar testnet outage turns a docs PR red, and a red build that nobody
+# believes is worse than no build at all.
+#
+# This file only decides *when* the suite runs. The steps live in
+# conformance-run.yml, which is a call-only reusable workflow, because a file
+# that declares `workflow_call` alongside these triggers produces a zero-job run
+# titled by its path — and the schedule stops firing. See that file's header.
+on:
+  schedule:
+    # Daily. Spec drift and upstream harness changes are the thing being watched
+    # for, and neither moves faster than that.
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    inputs:
+      x402_ref:
+        description: 'Ref of x402-foundation/x402 to test against'
+        required: false
+        default: 'main'
+  # Also on branches named conformance/**, so the job can be iterated on without
+  # waiting for a nightly run or merging an untested workflow to main.
+  push:
+    branches: ['conformance/**']
+
+concurrency:
+  group: conformance
+  cancel-in-progress: false
+
+jobs:
+  upstream-e2e:
+    uses: ./.github/workflows/conformance-run.yml
+    with:
+      # Empty on schedule and push events, where no input was supplied.
+      x402_ref: ${{ inputs.x402_ref || 'main' }}
+    secrets: inherit

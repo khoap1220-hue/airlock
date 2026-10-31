@@ -1,0 +1,1016 @@
+# Clean-state corpus manifest for Airlock dogfood repositories (Issue #26, Roadmap 0.10).
+# Authoritative record pinning the six dogfood repositories by full 40-character commit SHA.
+# Every file is tracked by its source repository path, corpus destination, byte size and SHA-256.
+
+version = 1
+
+[repositories]
+
+[repositories.soroban-budget-assert]
+repo = "Tollcraft/soroban-budget-assert"
+commit = "8d74409c7771414f0fdb211a43e821c0ce2280b3"
+default_branch = "main"
+
+[repositories.soroban-cost-linter]
+repo = "Tollcraft/soroban-cost-linter"
+commit = "2a0c784dd8974298e4054e55e325e3e87c5d5195"
+default_branch = "main"
+
+[repositories.accensa-app]
+repo = "accensa/accensa-app"
+commit = "0bc5cf51696b7ae5506adfd568946b80ee564fb6"
+default_branch = "main"
+
+[repositories.accensa-contracts]
+repo = "accensa/accensa-contracts"
+commit = "03474176b3d699e0bfebb408c018a47a44fa5ba8"
+default_branch = "main"
+
+[repositories.x402-facilitator-stellar]
+repo = "accensa/x402-facilitator-stellar"
+commit = "2aafe8d5db5e480844d935233121ec14cd8b3c48"
+default_branch = "main"
+
+[repositories.soroban-cost-profiler]
+repo = "Tollcraft/soroban-cost-profiler"
+commit = "6d7ed9cbe92fabdf8612c7b02bb434962ac8abe3"
+default_branch = "main"
+
+# -----------------------------------------------------------------------------
+# Omissions: files inspected during intake and omitted under Rule 2
+# -----------------------------------------------------------------------------
+
+[[omissions]]
+repo = "accensa-app"
+commit = "0bc5cf51696b7ae5506adfd568946b80ee564fb6"
+source_path = "apps/demo-merchant/tailwind.config.js"
+sha256 = "5150632b0b0575f5b444f37e22552e167958899778acc80ba102122595c77539"
+size_bytes = 255
+reason = "Contains JSDoc /** @type {import('tailwindcss').Config} */ matching regex for non-suppressible HIGH rule cfg-dynamic-code"
+
+# -----------------------------------------------------------------------------
+# Included corpus files (107 files)
+# -----------------------------------------------------------------------------
+
+[[files]]
+repo = "accensa-app"
+commit = "0bc5cf51696b7ae5506adfd568946b80ee564fb6"
+source_path = ".github/workflows/ci.yml"
+corpus_path = "tests/corpus/repos/accensa-app/.github/workflows/ci.yml"
+sha256 = "fcbdad55c6de6ec4532517e65f1cf9c7450443133b915720df6363f6684fd4f8"
+size_bytes = 7610
+roles = ["workflow", "source"]
+
+[[files]]
+repo = "accensa-app"
+commit = "0bc5cf51696b7ae5506adfd568946b80ee564fb6"
+source_path = ".github/workflows/malware-scan.yml"
+corpus_path = "tests/corpus/repos/accensa-app/.github/workflows/malware-scan.yml"
+sha256 = "781027fba324526598ddb47d969b1d9abbd4c71ac8d0ab7e6a886094a16c0771"
+size_bytes = 3659
+roles = ["workflow", "source"]
+
+[[files]]
+repo = "accensa-app"
+commit = "0bc5cf51696b7ae5506adfd568946b80ee564fb6"
+source_path = ".github/workflows/publish.yml"
+corpus_path = "tests/corpus/repos/accensa-app/.github/workflows/publish.yml"
+sha256 = "3396fb97b4e57ac8d31cdfb396e2972f1c63632bcf3ef4e6d2bfb66db64d82bc"
+size_bytes = 4488
+roles = ["workflow", "source"]
+
+[[files]]
+repo = "accensa-app"
+commit = "0bc5cf51696b7ae5506adfd568946b80ee564fb6"
+source_path = ".github/workflows/reconcile.yml"
+corpus_path = "tests/corpus/repos/accensa-app/.github/workflows/reconcile.yml"
+sha256 = "7b52143882c628bf57a3fe9b1e142876998b939f365891668d7d91850e0b656b"
+size_bytes = 2400
+roles = ["workflow", "source"]
+
+[[files]]
+repo = "accensa-app"
+commit = "0bc5cf51696b7ae5506adfd568946b80ee564fb6"
+source_path = ".github/workflows/scorecard.yml"
+corpus_path = "tests/corpus/repos/accensa-app/.github/workflows/scorecard.yml"
+sha256 = "74d3578d41616eea9801a8281999acaad7b7615c6bf9a3b3fec68871fbfdf1f3"
+size_bytes = 3428
+roles = ["workflow", "source"]
+
+[[files]]
+repo = "accensa-app"
+commit = "0bc5cf51696b7ae5506adfd568946b80ee564fb6"
+source_path = ".github/workflows/stale-check.yml"
+corpus_path = "tests/corpus/repos/accensa-app/.github/workflows/stale-check.yml"
+sha256 = "e42807a5315bd6d83c1ab071c91a82af4c4f9e8f13409f2baf44d93fdcd09359"
+size_bytes = 1884
+roles = ["workflow", "source"]
+
+[[files]]
+repo = "accensa-app"
+commit = "0bc5cf51696b7ae5506adfd568946b80ee564fb6"
+source_path = ".github/workflows/sync.yml"
+corpus_path = "tests/corpus/repos/accensa-app/.github/workflows/sync.yml"
+sha256 = "3f36dd1a43d8c6893303bde7b7bd7e52ee38bfae7dafd914645c760fe5814215"
+size_bytes = 4555
+roles = ["workflow", "source"]
+
+[[files]]
+repo = "accensa-app"
+commit = "0bc5cf51696b7ae5506adfd568946b80ee564fb6"
+source_path = ".github/workflows/visual-test.yml"
+corpus_path = "tests/corpus/repos/accensa-app/.github/workflows/visual-test.yml"
+sha256 = "376f135263d21f4ad919fbd413d4d985eaa01b01e162914d5e6d3538da7471ff"
+size_bytes = 1953
+roles = ["workflow", "source"]
+
+[[files]]
+repo = "accensa-app"
+commit = "0bc5cf51696b7ae5506adfd568946b80ee564fb6"
+source_path = "apps/demo-merchant/package.json"
+corpus_path = "tests/corpus/repos/accensa-app/apps/demo-merchant/package.json"
+sha256 = "983b88868703ddf6c378de4f9ab4c63ba4d997b5d7970cf12855bfa6ee52e7e3"
+size_bytes = 995
+roles = ["package-manifest", "source"]
+
+[[files]]
+repo = "accensa-app"
+commit = "0bc5cf51696b7ae5506adfd568946b80ee564fb6"
+source_path = "apps/demo-merchant/postcss.config.js"
+corpus_path = "tests/corpus/repos/accensa-app/apps/demo-merchant/postcss.config.js"
+sha256 = "e32657baf631d7c5f4dc67b4b2ee0ec8e7d5b3c41860e09cddce7c0377cd80bc"
+size_bytes = 81
+roles = ["tooling-config", "source"]
+
+[[files]]
+repo = "accensa-app"
+commit = "0bc5cf51696b7ae5506adfd568946b80ee564fb6"
+source_path = "apps/demo-merchant/tsconfig.json"
+corpus_path = "tests/corpus/repos/accensa-app/apps/demo-merchant/tsconfig.json"
+sha256 = "ce8226483e5266244de7a0d0f0f109836e46f76a66fdc12cbd01e078af58931a"
+size_bytes = 509
+roles = ["source"]
+
+[[files]]
+repo = "accensa-app"
+commit = "0bc5cf51696b7ae5506adfd568946b80ee564fb6"
+source_path = "apps/docs/package.json"
+corpus_path = "tests/corpus/repos/accensa-app/apps/docs/package.json"
+sha256 = "ec9cf7d9e6699ea40f62fa19fad56c6e815b19e3cc97321bb7412b22a5c6ae7c"
+size_bytes = 1217
+roles = ["package-manifest", "source"]
+
+[[files]]
+repo = "accensa-app"
+commit = "0bc5cf51696b7ae5506adfd568946b80ee564fb6"
+source_path = "apps/docs/tsconfig.json"
+corpus_path = "tests/corpus/repos/accensa-app/apps/docs/tsconfig.json"
+sha256 = "8837ac50dd671c76eac0729036ea17b532d9011f18605f63d2a6a87ea8050db6"
+size_bytes = 578
+roles = ["source"]
+
+[[files]]
+repo = "accensa-app"
+commit = "0bc5cf51696b7ae5506adfd568946b80ee564fb6"
+source_path = "apps/web/eslint.config.mjs"
+corpus_path = "tests/corpus/repos/accensa-app/apps/web/eslint.config.mjs"
+sha256 = "3abe18bcb485a2a406308e12ed8042cf767a5f8bd757440b9277e1cc2088280d"
+size_bytes = 756
+roles = ["tooling-config", "source"]
+
+[[files]]
+repo = "accensa-app"
+commit = "0bc5cf51696b7ae5506adfd568946b80ee564fb6"
+source_path = "apps/web/next.config.ts"
+corpus_path = "tests/corpus/repos/accensa-app/apps/web/next.config.ts"
+sha256 = "d164122afc276767a2bb81ee946a8db89659292f59dd4c86b406060dd3de5986"
+size_bytes = 823
+roles = ["tooling-config", "source"]
+
+[[files]]
+repo = "accensa-app"
+commit = "0bc5cf51696b7ae5506adfd568946b80ee564fb6"
+source_path = "apps/web/package.json"
+corpus_path = "tests/corpus/repos/accensa-app/apps/web/package.json"
+sha256 = "177db1c6fd92680483914d85a24be8d3f109d9e173b4fc99c7b84255d544c7de"
+size_bytes = 2151
+roles = ["package-manifest", "source"]
+
+[[files]]
+repo = "accensa-app"
+commit = "0bc5cf51696b7ae5506adfd568946b80ee564fb6"
+source_path = "apps/web/postcss.config.mjs"
+corpus_path = "tests/corpus/repos/accensa-app/apps/web/postcss.config.mjs"
+sha256 = "9ca55411b62b2c9cc5631a3e6c631d80c8b8171c7b9ea1e19f83400f4100e910"
+size_bytes = 94
+roles = ["tooling-config", "source"]
+
+[[files]]
+repo = "accensa-app"
+commit = "0bc5cf51696b7ae5506adfd568946b80ee564fb6"
+source_path = "apps/web/tsconfig.json"
+corpus_path = "tests/corpus/repos/accensa-app/apps/web/tsconfig.json"
+sha256 = "1c8a3a83dc78af2e265c5fe5c528b4ddb036f47227c39f5be607d089f9b5f141"
+size_bytes = 710
+roles = ["source"]
+
+[[files]]
+repo = "accensa-app"
+commit = "0bc5cf51696b7ae5506adfd568946b80ee564fb6"
+source_path = "package.json"
+corpus_path = "tests/corpus/repos/accensa-app/package.json"
+sha256 = "424d9ac8d379f737fdd56d8c39a288024594f447e15f97f51fc0bec3616e430f"
+size_bytes = 597
+roles = ["package-manifest", "source"]
+
+[[files]]
+repo = "accensa-app"
+commit = "0bc5cf51696b7ae5506adfd568946b80ee564fb6"
+source_path = "packages/sdk/Cargo.toml"
+corpus_path = "tests/corpus/repos/accensa-app/packages/sdk/Cargo.toml"
+sha256 = "2e04dda1ee5eed1925f721f34d414d4e022b2de718f0841629e6f7ba38e5caf2"
+size_bytes = 280
+roles = ["source"]
+
+[[files]]
+repo = "accensa-app"
+commit = "0bc5cf51696b7ae5506adfd568946b80ee564fb6"
+source_path = "packages/sdk/eslint.config.mjs"
+corpus_path = "tests/corpus/repos/accensa-app/packages/sdk/eslint.config.mjs"
+sha256 = "729a1af3d664e9aa37a186edda02a3cdde9768ef42d4bb985dbb8fd5ca8219fe"
+size_bytes = 408
+roles = ["tooling-config", "source"]
+
+[[files]]
+repo = "accensa-app"
+commit = "0bc5cf51696b7ae5506adfd568946b80ee564fb6"
+source_path = "packages/sdk/examples/express-server/package.json"
+corpus_path = "tests/corpus/repos/accensa-app/packages/sdk/examples/express-server/package.json"
+sha256 = "4748099b32d67b0e8c7d245c92e03f03427a1c96012f81e57cc59c25fd408e31"
+size_bytes = 529
+roles = ["package-manifest", "source"]
+
+[[files]]
+repo = "accensa-app"
+commit = "0bc5cf51696b7ae5506adfd568946b80ee564fb6"
+source_path = "packages/sdk/package.json"
+corpus_path = "tests/corpus/repos/accensa-app/packages/sdk/package.json"
+sha256 = "d2b8ea053ef377facc0f777b02c0a60e64b2f46d67d173e8dad1dd83545c1daf"
+size_bytes = 3372
+roles = ["package-manifest", "source"]
+
+[[files]]
+repo = "accensa-app"
+commit = "0bc5cf51696b7ae5506adfd568946b80ee564fb6"
+source_path = "packages/sdk/tsconfig.json"
+corpus_path = "tests/corpus/repos/accensa-app/packages/sdk/tsconfig.json"
+sha256 = "9acf2ac0f26bcfd643a4c561a6ab1c7f219142295743a94ecc42e094519e1d33"
+size_bytes = 471
+roles = ["source"]
+
+[[files]]
+repo = "accensa-app"
+commit = "0bc5cf51696b7ae5506adfd568946b80ee564fb6"
+source_path = "packages/shared/package.json"
+corpus_path = "tests/corpus/repos/accensa-app/packages/shared/package.json"
+sha256 = "3b497df58ac94c5fa3ca232881aa4e32f213fe7f8ea7f43f6e95574d299c53bb"
+size_bytes = 1080
+roles = ["package-manifest", "source"]
+
+[[files]]
+repo = "accensa-app"
+commit = "0bc5cf51696b7ae5506adfd568946b80ee564fb6"
+source_path = "packages/shared/tsconfig.json"
+corpus_path = "tests/corpus/repos/accensa-app/packages/shared/tsconfig.json"
+sha256 = "cda74878e359a22358f29a8f79ae7627bbc07da01e7cc8aadb8f49d49f9760e8"
+size_bytes = 508
+roles = ["source"]
+
+[[files]]
+repo = "accensa-app"
+commit = "0bc5cf51696b7ae5506adfd568946b80ee564fb6"
+source_path = "scripts/reconcile-payments/package.json"
+corpus_path = "tests/corpus/repos/accensa-app/scripts/reconcile-payments/package.json"
+sha256 = "86ee210b7a9add66d4baf1ab6158f2a2c24a8799c82eb51a1b7f650969cc77dd"
+size_bytes = 551
+roles = ["package-manifest", "source"]
+
+[[files]]
+repo = "accensa-contracts"
+commit = "03474176b3d699e0bfebb408c018a47a44fa5ba8"
+source_path = ".github/workflows/changelog.yml"
+corpus_path = "tests/corpus/repos/accensa-contracts/.github/workflows/changelog.yml"
+sha256 = "65f18470f2bc028666d9e8745783f8a8e177e9ca1b6253f5ecdc9e517c5ae2e8"
+size_bytes = 3163
+roles = ["workflow", "source"]
+
+[[files]]
+repo = "accensa-contracts"
+commit = "03474176b3d699e0bfebb408c018a47a44fa5ba8"
+source_path = ".github/workflows/ci.yml"
+corpus_path = "tests/corpus/repos/accensa-contracts/.github/workflows/ci.yml"
+sha256 = "d5891dd5bb6f0be52e753e588c2fe4258b711908991b553f6d5df1d20a664f6f"
+size_bytes = 15203
+roles = ["workflow", "source"]
+
+[[files]]
+repo = "accensa-contracts"
+commit = "03474176b3d699e0bfebb408c018a47a44fa5ba8"
+source_path = ".github/workflows/malware-scan.yml"
+corpus_path = "tests/corpus/repos/accensa-contracts/.github/workflows/malware-scan.yml"
+sha256 = "781027fba324526598ddb47d969b1d9abbd4c71ac8d0ab7e6a886094a16c0771"
+size_bytes = 3659
+roles = ["workflow", "source"]
+
+[[files]]
+repo = "accensa-contracts"
+commit = "03474176b3d699e0bfebb408c018a47a44fa5ba8"
+source_path = ".github/workflows/scorecard.yml"
+corpus_path = "tests/corpus/repos/accensa-contracts/.github/workflows/scorecard.yml"
+sha256 = "f1591626d9890ee2a7c94e0e6bcfa7ada70af30f68559063e54366592fb0f862"
+size_bytes = 3427
+roles = ["workflow", "source"]
+
+[[files]]
+repo = "accensa-contracts"
+commit = "03474176b3d699e0bfebb408c018a47a44fa5ba8"
+source_path = "Cargo.toml"
+corpus_path = "tests/corpus/repos/accensa-contracts/Cargo.toml"
+sha256 = "8a8c581fb64d5654e1604972cb9a81053c3c9cb8f6d9a7066e3a32e7e0283493"
+size_bytes = 1775
+roles = ["source"]
+
+[[files]]
+repo = "accensa-contracts"
+commit = "03474176b3d699e0bfebb408c018a47a44fa5ba8"
+source_path = "contracts/common/Cargo.toml"
+corpus_path = "tests/corpus/repos/accensa-contracts/contracts/common/Cargo.toml"
+sha256 = "7a9ac069d915af80f525af9b24e1a35fd2d62ba4f5431b6d73f1d1b5dc275729"
+size_bytes = 318
+roles = ["source"]
+
+[[files]]
+repo = "accensa-contracts"
+commit = "03474176b3d699e0bfebb408c018a47a44fa5ba8"
+source_path = "contracts/cross-chain/Cargo.toml"
+corpus_path = "tests/corpus/repos/accensa-contracts/contracts/cross-chain/Cargo.toml"
+sha256 = "76d314e2cdf86457c85c19514c1a4e5c5029cbc4cc1f9008d9d5bfdc43b45a54"
+size_bytes = 527
+roles = ["source"]
+
+[[files]]
+repo = "accensa-contracts"
+commit = "03474176b3d699e0bfebb408c018a47a44fa5ba8"
+source_path = "contracts/governance/Cargo.toml"
+corpus_path = "tests/corpus/repos/accensa-contracts/contracts/governance/Cargo.toml"
+sha256 = "aeb985372425be8bb8f417925711bbfc8e71e2a74b5103c78c19a83c03d32289"
+size_bytes = 1368
+roles = ["source"]
+
+[[files]]
+repo = "accensa-contracts"
+commit = "03474176b3d699e0bfebb408c018a47a44fa5ba8"
+source_path = "contracts/insurance/Cargo.toml"
+corpus_path = "tests/corpus/repos/accensa-contracts/contracts/insurance/Cargo.toml"
+sha256 = "aaeb56e6eb8ee948cd2527c7b6eb379e120b4da0dec926224e38d6a3182e4501"
+size_bytes = 449
+roles = ["source"]
+
+[[files]]
+repo = "accensa-contracts"
+commit = "03474176b3d699e0bfebb408c018a47a44fa5ba8"
+source_path = "contracts/multisig-account/Cargo.toml"
+corpus_path = "tests/corpus/repos/accensa-contracts/contracts/multisig-account/Cargo.toml"
+sha256 = "2a2932432d8933941f44ae811382798ed07b36015994fd7bdd7d29d21306168e"
+size_bytes = 1285
+roles = ["source"]
+
+[[files]]
+repo = "accensa-contracts"
+commit = "03474176b3d699e0bfebb408c018a47a44fa5ba8"
+source_path = "contracts/oracle/Cargo.toml"
+corpus_path = "tests/corpus/repos/accensa-contracts/contracts/oracle/Cargo.toml"
+sha256 = "243d18caf8b6b326f3431bfedf110fc1a62dafe4321072de7733b123a868dd84"
+size_bytes = 424
+roles = ["source"]
+
+[[files]]
+repo = "accensa-contracts"
+commit = "03474176b3d699e0bfebb408c018a47a44fa5ba8"
+source_path = "contracts/privacy/Cargo.toml"
+corpus_path = "tests/corpus/repos/accensa-contracts/contracts/privacy/Cargo.toml"
+sha256 = "b5990050c51bc4b79451d58f2852a3cc3027468ab918d08cb504b31e8cbff67f"
+size_bytes = 451
+roles = ["source"]
+
+[[files]]
+repo = "accensa-contracts"
+commit = "03474176b3d699e0bfebb408c018a47a44fa5ba8"
+source_path = "contracts/receipt-anchor/Cargo.toml"
+corpus_path = "tests/corpus/repos/accensa-contracts/contracts/receipt-anchor/Cargo.toml"
+sha256 = "2380713377fa0260a252ec7348907bdd1998cb1378cf4af961d12e7478112dbc"
+size_bytes = 2125
+roles = ["source"]
+
+[[files]]
+repo = "accensa-contracts"
+commit = "03474176b3d699e0bfebb408c018a47a44fa5ba8"
+source_path = "contracts/receipt-shard/Cargo.toml"
+corpus_path = "tests/corpus/repos/accensa-contracts/contracts/receipt-shard/Cargo.toml"
+sha256 = "9bac2dde2160e61ff0dea4886a6cc3f78526cfc498b3e26cd5f1cbab3fa87525"
+size_bytes = 1451
+roles = ["source"]
+
+[[files]]
+repo = "accensa-contracts"
+commit = "03474176b3d699e0bfebb408c018a47a44fa5ba8"
+source_path = "contracts/refund-policy-time/Cargo.toml"
+corpus_path = "tests/corpus/repos/accensa-contracts/contracts/refund-policy-time/Cargo.toml"
+sha256 = "6446ae8acad3127ac8d6f537a0242bb6b36880a2b969001a7db6d3720804d1ee"
+size_bytes = 1403
+roles = ["source"]
+
+[[files]]
+repo = "accensa-contracts"
+commit = "03474176b3d699e0bfebb408c018a47a44fa5ba8"
+source_path = "contracts/refund-policy-vdf/Cargo.toml"
+corpus_path = "tests/corpus/repos/accensa-contracts/contracts/refund-policy-vdf/Cargo.toml"
+sha256 = "0fcf66d6ff42a4f9d372678a57392a3b76332cb36e0f5931745e797e2284e2eb"
+size_bytes = 1605
+roles = ["source"]
+
+[[files]]
+repo = "accensa-contracts"
+commit = "03474176b3d699e0bfebb408c018a47a44fa5ba8"
+source_path = "contracts/refund-vault-factory/Cargo.toml"
+corpus_path = "tests/corpus/repos/accensa-contracts/contracts/refund-vault-factory/Cargo.toml"
+sha256 = "f11a8d28d81066a0ff5c2da459a72f34c05cc07c98777f0c84b06a65727b2290"
+size_bytes = 1431
+roles = ["source"]
+
+[[files]]
+repo = "accensa-contracts"
+commit = "03474176b3d699e0bfebb408c018a47a44fa5ba8"
+source_path = "contracts/refund-vault/Cargo.toml"
+corpus_path = "tests/corpus/repos/accensa-contracts/contracts/refund-vault/Cargo.toml"
+sha256 = "2b0f1654422d61c1ddf2c26ff52096fbfc6502204037aa97e74439e875e36068"
+size_bytes = 1665
+roles = ["source"]
+
+[[files]]
+repo = "accensa-contracts"
+commit = "03474176b3d699e0bfebb408c018a47a44fa5ba8"
+source_path = "contracts/reputation/Cargo.toml"
+corpus_path = "tests/corpus/repos/accensa-contracts/contracts/reputation/Cargo.toml"
+sha256 = "3f976ca2a19e32c4d6e1ef1d5f396d41683554b3f3f9addb55a267c02a086e98"
+size_bytes = 446
+roles = ["source"]
+
+[[files]]
+repo = "accensa-contracts"
+commit = "03474176b3d699e0bfebb408c018a47a44fa5ba8"
+source_path = "contracts/state-channel/Cargo.toml"
+corpus_path = "tests/corpus/repos/accensa-contracts/contracts/state-channel/Cargo.toml"
+sha256 = "dcf3f2bef20612eae22bc53b4928b94633c5eabe241275ee5240adaa777a8ca5"
+size_bytes = 675
+roles = ["source"]
+
+[[files]]
+repo = "accensa-contracts"
+commit = "03474176b3d699e0bfebb408c018a47a44fa5ba8"
+source_path = "contracts/stream-vault/Cargo.toml"
+corpus_path = "tests/corpus/repos/accensa-contracts/contracts/stream-vault/Cargo.toml"
+sha256 = "fad3aaacf7285d6627dfbe3a3b18492a2a6d3ac39ddf44c880485087222dc84c"
+size_bytes = 1271
+roles = ["source"]
+
+[[files]]
+repo = "accensa-contracts"
+commit = "03474176b3d699e0bfebb408c018a47a44fa5ba8"
+source_path = "contracts/testutils/Cargo.toml"
+corpus_path = "tests/corpus/repos/accensa-contracts/contracts/testutils/Cargo.toml"
+sha256 = "fd88ca5938bb1dbe3b221b40f92f0286906240751c22e1a705d2a89dfadb2404"
+size_bytes = 259
+roles = ["source"]
+
+[[files]]
+repo = "accensa-contracts"
+commit = "03474176b3d699e0bfebb408c018a47a44fa5ba8"
+source_path = "contracts/treasury/Cargo.toml"
+corpus_path = "tests/corpus/repos/accensa-contracts/contracts/treasury/Cargo.toml"
+sha256 = "3acf973020c13fc9985569404ce7866ba77c6788530e557e5da3ee423edaec9f"
+size_bytes = 443
+roles = ["source"]
+
+[[files]]
+repo = "accensa-contracts"
+commit = "03474176b3d699e0bfebb408c018a47a44fa5ba8"
+source_path = "contracts/upto-authorization/Cargo.toml"
+corpus_path = "tests/corpus/repos/accensa-contracts/contracts/upto-authorization/Cargo.toml"
+sha256 = "2ab9ab557c83d63bce75250201b23d72619676e63eb44808aba101223d95541c"
+size_bytes = 565
+roles = ["source"]
+
+[[files]]
+repo = "accensa-contracts"
+commit = "03474176b3d699e0bfebb408c018a47a44fa5ba8"
+source_path = "spikes/upto-nested-approve/Cargo.toml"
+corpus_path = "tests/corpus/repos/accensa-contracts/spikes/upto-nested-approve/Cargo.toml"
+sha256 = "8732058408b769e70e9be0234daedc80985a40654e30d2f41e0127ec7ac60ba5"
+size_bytes = 382
+roles = ["source"]
+
+[[files]]
+repo = "soroban-budget-assert"
+commit = "8d74409c7771414f0fdb211a43e821c0ce2280b3"
+source_path = ".github/workflows/budget.yml"
+corpus_path = "tests/corpus/repos/soroban-budget-assert/.github/workflows/budget.yml"
+sha256 = "007670776905f973994297907e6ceba28fe2e38f26ddf3f7a42b195b16bda390"
+size_bytes = 10314
+roles = ["workflow", "source"]
+
+[[files]]
+repo = "soroban-budget-assert"
+commit = "8d74409c7771414f0fdb211a43e821c0ce2280b3"
+source_path = ".github/workflows/deploy-site.yml"
+corpus_path = "tests/corpus/repos/soroban-budget-assert/.github/workflows/deploy-site.yml"
+sha256 = "0d44af353c044315f0e6d5a03603a50a489cd41f113d0c770db26c77c83614ed"
+size_bytes = 1324
+roles = ["workflow", "source"]
+
+[[files]]
+repo = "soroban-budget-assert"
+commit = "8d74409c7771414f0fdb211a43e821c0ce2280b3"
+source_path = ".github/workflows/malware-scan.yml"
+corpus_path = "tests/corpus/repos/soroban-budget-assert/.github/workflows/malware-scan.yml"
+sha256 = "781027fba324526598ddb47d969b1d9abbd4c71ac8d0ab7e6a886094a16c0771"
+size_bytes = 3659
+roles = ["workflow", "source"]
+
+[[files]]
+repo = "soroban-budget-assert"
+commit = "8d74409c7771414f0fdb211a43e821c0ce2280b3"
+source_path = ".github/workflows/quality.yml"
+corpus_path = "tests/corpus/repos/soroban-budget-assert/.github/workflows/quality.yml"
+sha256 = "e36317f3439a14bc116a99f06b3d6289c4088e58e163da31192d4362fc6f8f1b"
+size_bytes = 1537
+roles = ["workflow", "source"]
+
+[[files]]
+repo = "soroban-budget-assert"
+commit = "8d74409c7771414f0fdb211a43e821c0ce2280b3"
+source_path = ".github/workflows/release.yml"
+corpus_path = "tests/corpus/repos/soroban-budget-assert/.github/workflows/release.yml"
+sha256 = "3342eeb2f7eac5b9c702aaa4543f11a7d06423dafd3685add52083d11596e90f"
+size_bytes = 5023
+roles = ["workflow", "source"]
+
+[[files]]
+repo = "soroban-budget-assert"
+commit = "8d74409c7771414f0fdb211a43e821c0ce2280b3"
+source_path = ".github/workflows/scorecard.yml"
+corpus_path = "tests/corpus/repos/soroban-budget-assert/.github/workflows/scorecard.yml"
+sha256 = "78a2bbf8e1fef446faa383bd07dd05f1a52e9c13edb8ba1d75d1e56ec5f9e3fc"
+size_bytes = 3427
+roles = ["workflow", "source"]
+
+[[files]]
+repo = "soroban-budget-assert"
+commit = "8d74409c7771414f0fdb211a43e821c0ce2280b3"
+source_path = "Cargo.toml"
+corpus_path = "tests/corpus/repos/soroban-budget-assert/Cargo.toml"
+sha256 = "b3dc43c6248f5b0184d98bdda2221e54e46ef18587fe7646b0feaa7b9fe7b944"
+size_bytes = 1080
+roles = ["source"]
+
+[[files]]
+repo = "soroban-budget-assert"
+commit = "8d74409c7771414f0fdb211a43e821c0ce2280b3"
+source_path = "amm-pool-contract/Cargo.toml"
+corpus_path = "tests/corpus/repos/soroban-budget-assert/amm-pool-contract/Cargo.toml"
+sha256 = "5b8b737cbc2e1bc6641bd30cb855e0213fa260a42e24a8e56b636c22b32a14c3"
+size_bytes = 599
+roles = ["source"]
+
+[[files]]
+repo = "soroban-budget-assert"
+commit = "8d74409c7771414f0fdb211a43e821c0ce2280b3"
+source_path = "bloat-contract/Cargo.toml"
+corpus_path = "tests/corpus/repos/soroban-budget-assert/bloat-contract/Cargo.toml"
+sha256 = "d5bb3a61372eec1480cf4feb3882282d2019c88226154920e3e8a70f23d7c11a"
+size_bytes = 163
+roles = ["source"]
+
+[[files]]
+repo = "soroban-budget-assert"
+commit = "8d74409c7771414f0fdb211a43e821c0ce2280b3"
+source_path = "budget-macros/Cargo.toml"
+corpus_path = "tests/corpus/repos/soroban-budget-assert/budget-macros/Cargo.toml"
+sha256 = "8ad44516939bbf8be74b830184be300414cc01b4d855cff89f6dd8d48acf3db3"
+size_bytes = 1243
+roles = ["source"]
+
+[[files]]
+repo = "soroban-budget-assert"
+commit = "8d74409c7771414f0fdb211a43e821c0ce2280b3"
+source_path = "cargo-budget-report/Cargo.toml"
+corpus_path = "tests/corpus/repos/soroban-budget-assert/cargo-budget-report/Cargo.toml"
+sha256 = "832796d8e9bb5fe30806d1b6ed473c56fa12f3b51be485834f630bc85dd0205f"
+size_bytes = 803
+roles = ["source"]
+
+[[files]]
+repo = "soroban-budget-assert"
+commit = "8d74409c7771414f0fdb211a43e821c0ce2280b3"
+source_path = "cargo-budget-report/tests/fixtures/exports_min.wasm"
+corpus_path = "tests/corpus/repos/soroban-budget-assert/cargo-budget-report/tests/fixtures/exports_min.wasm"
+sha256 = "52be260d09962223c1fadbe9ff36d4d3b0ae1068378e4c664ef2fa09b8765baa"
+size_bytes = 65
+roles = ["wasm"]
+
+[[files]]
+repo = "soroban-budget-assert"
+commit = "8d74409c7771414f0fdb211a43e821c0ce2280b3"
+source_path = "host-function-contract/Cargo.toml"
+corpus_path = "tests/corpus/repos/soroban-budget-assert/host-function-contract/Cargo.toml"
+sha256 = "9637716f4d17dfb6f9e84982513fc79a331699d3e612d317ac369c48bbcb8f43"
+size_bytes = 254
+roles = ["source"]
+
+[[files]]
+repo = "soroban-cost-linter"
+commit = "2a0c784dd8974298e4054e55e325e3e87c5d5195"
+source_path = ".github/workflows/container-publish.yml"
+corpus_path = "tests/corpus/repos/soroban-cost-linter/.github/workflows/container-publish.yml"
+sha256 = "f068a17e300eea4367acac4ff795aca408cdd78561bd77b81beca28c3e61e96d"
+size_bytes = 2527
+roles = ["workflow", "source"]
+
+[[files]]
+repo = "soroban-cost-linter"
+commit = "2a0c784dd8974298e4054e55e325e3e87c5d5195"
+source_path = ".github/workflows/dogfood-action.yml"
+corpus_path = "tests/corpus/repos/soroban-cost-linter/.github/workflows/dogfood-action.yml"
+sha256 = "b2bdef999423bd92e049404feea18b443dfa051fb02868dd8407f5b691d1a400"
+size_bytes = 8189
+roles = ["workflow", "source"]
+
+[[files]]
+repo = "soroban-cost-linter"
+commit = "2a0c784dd8974298e4054e55e325e3e87c5d5195"
+source_path = ".github/workflows/lint.yml"
+corpus_path = "tests/corpus/repos/soroban-cost-linter/.github/workflows/lint.yml"
+sha256 = "f860937bf394a282e65810db416502c15c69d6e4ae796bb874b9a014a4a97344"
+size_bytes = 2057
+roles = ["workflow", "source"]
+
+[[files]]
+repo = "soroban-cost-linter"
+commit = "2a0c784dd8974298e4054e55e325e3e87c5d5195"
+source_path = ".github/workflows/malware-scan.yml"
+corpus_path = "tests/corpus/repos/soroban-cost-linter/.github/workflows/malware-scan.yml"
+sha256 = "781027fba324526598ddb47d969b1d9abbd4c71ac8d0ab7e6a886094a16c0771"
+size_bytes = 3659
+roles = ["workflow", "source"]
+
+[[files]]
+repo = "soroban-cost-linter"
+commit = "2a0c784dd8974298e4054e55e325e3e87c5d5195"
+source_path = ".github/workflows/nightly-bump.yml"
+corpus_path = "tests/corpus/repos/soroban-cost-linter/.github/workflows/nightly-bump.yml"
+sha256 = "1c85b9963810ead1a2e1bac2d473dc90363cc2cfcdb65d46dcbc2807db8325af"
+size_bytes = 4545
+roles = ["workflow", "source"]
+
+[[files]]
+repo = "soroban-cost-linter"
+commit = "2a0c784dd8974298e4054e55e325e3e87c5d5195"
+source_path = ".github/workflows/publish.yml"
+corpus_path = "tests/corpus/repos/soroban-cost-linter/.github/workflows/publish.yml"
+sha256 = "2ee8ce9a5e7ebef2749531d4417c4c167e62b943aa5f41bcf236abec673233fd"
+size_bytes = 5659
+roles = ["workflow", "source"]
+
+[[files]]
+repo = "soroban-cost-linter"
+commit = "2a0c784dd8974298e4054e55e325e3e87c5d5195"
+source_path = ".github/workflows/scorecard.yml"
+corpus_path = "tests/corpus/repos/soroban-cost-linter/.github/workflows/scorecard.yml"
+sha256 = "b2cb2eab5e55707f6faed3afcc8f68281c595b62c1f6fc831cfac205cd0ea3ca"
+size_bytes = 3428
+roles = ["workflow", "source"]
+
+[[files]]
+repo = "soroban-cost-linter"
+commit = "2a0c784dd8974298e4054e55e325e3e87c5d5195"
+source_path = ".github/workflows/security.yml"
+corpus_path = "tests/corpus/repos/soroban-cost-linter/.github/workflows/security.yml"
+sha256 = "09a98a636e745d82194407468d92ea5e7b37b36d5b04256895d2757f1fc1cda1"
+size_bytes = 1044
+roles = ["workflow", "source"]
+
+[[files]]
+repo = "soroban-cost-linter"
+commit = "2a0c784dd8974298e4054e55e325e3e87c5d5195"
+source_path = "Cargo.toml"
+corpus_path = "tests/corpus/repos/soroban-cost-linter/Cargo.toml"
+sha256 = "c55f2b441c621fc0d003abf2e35bbd0fa206ba66f155c2e8909e67510a630636"
+size_bytes = 1355
+roles = ["source"]
+
+[[files]]
+repo = "soroban-cost-linter"
+commit = "2a0c784dd8974298e4054e55e325e3e87c5d5195"
+source_path = "cargo-cost-lint/Cargo.toml"
+corpus_path = "tests/corpus/repos/soroban-cost-linter/cargo-cost-lint/Cargo.toml"
+sha256 = "066f37ae600c1eb95ae166b51a9667f1d9bd4a579a65bb3f7aa6fc9f266d895a"
+size_bytes = 795
+roles = ["source"]
+
+[[files]]
+repo = "soroban-cost-linter"
+commit = "2a0c784dd8974298e4054e55e325e3e87c5d5195"
+source_path = "cargo-cost-lint/tests/flag_fixture_workspace/Cargo.toml"
+corpus_path = "tests/corpus/repos/soroban-cost-linter/cargo-cost-lint/tests/flag_fixture_workspace/Cargo.toml"
+sha256 = "2452ec2b1c11be0a5bb1394efeef6f52249bf3023063eb957d1a07c7c26b6e18"
+size_bytes = 269
+roles = ["source"]
+
+[[files]]
+repo = "soroban-cost-linter"
+commit = "2a0c784dd8974298e4054e55e325e3e87c5d5195"
+source_path = "cost_benchmarks/Cargo.toml"
+corpus_path = "tests/corpus/repos/soroban-cost-linter/cost_benchmarks/Cargo.toml"
+sha256 = "42e130b6ee4470b4bc83e8fdb806a3eab652a90f96dee418a44b1cbf53b44d94"
+size_bytes = 365
+roles = ["source"]
+
+[[files]]
+repo = "soroban-cost-linter"
+commit = "2a0c784dd8974298e4054e55e325e3e87c5d5195"
+source_path = "soroban_cost_lints/.cargo/config.toml"
+corpus_path = "tests/corpus/repos/soroban-cost-linter/soroban_cost_lints/.cargo/config.toml"
+sha256 = "780177665e7a4e22c4940ac1d1a3c391b712e7030949476ff3adde95ad16d558"
+size_bytes = 221
+roles = ["source"]
+
+[[files]]
+repo = "soroban-cost-linter"
+commit = "2a0c784dd8974298e4054e55e325e3e87c5d5195"
+source_path = "soroban_cost_lints/Cargo.toml"
+corpus_path = "tests/corpus/repos/soroban-cost-linter/soroban_cost_lints/Cargo.toml"
+sha256 = "e48da397a3c9530d2bbf7476a9e56e0417ec5ec652b50c0aad066a7f89255b55"
+size_bytes = 831
+roles = ["source"]
+
+[[files]]
+repo = "soroban-cost-linter"
+commit = "2a0c784dd8974298e4054e55e325e3e87c5d5195"
+source_path = "test_fixtures/smoke_test/Cargo.toml"
+corpus_path = "tests/corpus/repos/soroban-cost-linter/test_fixtures/smoke_test/Cargo.toml"
+sha256 = "e4d30dc59c5b5dd4ffe4deecde86caa52945671693306f3d1928a72bc5f0be01"
+size_bytes = 414
+roles = ["source"]
+
+[[files]]
+repo = "soroban-cost-linter"
+commit = "2a0c784dd8974298e4054e55e325e3e87c5d5195"
+source_path = "tools/generate-lint-docs/Cargo.toml"
+corpus_path = "tests/corpus/repos/soroban-cost-linter/tools/generate-lint-docs/Cargo.toml"
+sha256 = "543175c927e5d7c5543178f28e8c3b57f7d99512f965a1e372c1f3692e1b0c5a"
+size_bytes = 272
+roles = ["source"]
+
+[[files]]
+repo = "soroban-cost-profiler"
+commit = "6d7ed9cbe92fabdf8612c7b02bb434962ac8abe3"
+source_path = ".github/workflows/ci.yml"
+corpus_path = "tests/corpus/repos/soroban-cost-profiler/.github/workflows/ci.yml"
+sha256 = "f27c742cf3b2567b6394621bfe7839c5839c53b453b7f288cbd3422893a3f315"
+size_bytes = 1180
+roles = ["workflow", "source"]
+
+[[files]]
+repo = "soroban-cost-profiler"
+commit = "6d7ed9cbe92fabdf8612c7b02bb434962ac8abe3"
+source_path = ".github/workflows/malware-scan.yml"
+corpus_path = "tests/corpus/repos/soroban-cost-profiler/.github/workflows/malware-scan.yml"
+sha256 = "781027fba324526598ddb47d969b1d9abbd4c71ac8d0ab7e6a886094a16c0771"
+size_bytes = 3659
+roles = ["workflow", "source"]
+
+[[files]]
+repo = "soroban-cost-profiler"
+commit = "6d7ed9cbe92fabdf8612c7b02bb434962ac8abe3"
+source_path = "Cargo.toml"
+corpus_path = "tests/corpus/repos/soroban-cost-profiler/Cargo.toml"
+sha256 = "b56650a3f16adb03eb53c2975c472e5cb2360a0379c98d117bb84b3bc9f008a0"
+size_bytes = 4139
+roles = ["source"]
+
+[[files]]
+repo = "soroban-cost-profiler"
+commit = "6d7ed9cbe92fabdf8612c7b02bb434962ac8abe3"
+source_path = "fixtures/dummy-contract/Cargo.toml"
+corpus_path = "tests/corpus/repos/soroban-cost-profiler/fixtures/dummy-contract/Cargo.toml"
+sha256 = "3f2f39ad5494d82cf6fecad7363d2787cd649b0967b1d63dbad24fc2145cb697"
+size_bytes = 545
+roles = ["source"]
+
+[[files]]
+repo = "soroban-cost-profiler"
+commit = "6d7ed9cbe92fabdf8612c7b02bb434962ac8abe3"
+source_path = "fixtures/dwarf_probe/Cargo.toml"
+corpus_path = "tests/corpus/repos/soroban-cost-profiler/fixtures/dwarf_probe/Cargo.toml"
+sha256 = "63157b58b22c8c4dfb3e4bf2df65d659a6c6156e5287b32e215a3723dbcc0783"
+size_bytes = 935
+roles = ["source"]
+
+[[files]]
+repo = "soroban-cost-profiler"
+commit = "6d7ed9cbe92fabdf8612c7b02bb434962ac8abe3"
+source_path = "fixtures/dwarf_probe/dwarf_probe.wasm"
+corpus_path = "tests/corpus/repos/soroban-cost-profiler/fixtures/dwarf_probe/dwarf_probe.wasm"
+sha256 = "3db0287390162ef78472e42b2a0db100890105437711993818841d3a4afd1f70"
+size_bytes = 1690
+roles = ["wasm"]
+
+[[files]]
+repo = "soroban-cost-profiler"
+commit = "6d7ed9cbe92fabdf8612c7b02bb434962ac8abe3"
+source_path = "fixtures/dwarf_probe/dwarf_probe_no_debug.wasm"
+corpus_path = "tests/corpus/repos/soroban-cost-profiler/fixtures/dwarf_probe/dwarf_probe_no_debug.wasm"
+sha256 = "3688130a6441cd1f4b114650c2570af4b85098beb7f045308dbccedec29a227a"
+size_bytes = 595
+roles = ["wasm"]
+
+[[files]]
+repo = "soroban-cost-profiler"
+commit = "6d7ed9cbe92fabdf8612c7b02bb434962ac8abe3"
+source_path = "vendor/ed25519-dalek-2.1.1/.cargo-ok"
+corpus_path = "tests/corpus/repos/soroban-cost-profiler/vendor/ed25519-dalek-2.1.1/.cargo-ok"
+sha256 = "afbf9d0f3560b0fd7795e81c42a0a79ee6b6fc67e064f77826aee642cad28d91"
+size_bytes = 7
+roles = ["other"]
+
+[[files]]
+repo = "soroban-cost-profiler"
+commit = "6d7ed9cbe92fabdf8612c7b02bb434962ac8abe3"
+source_path = "vendor/ed25519-dalek-2.1.1/.cargo_vcs_info.json"
+corpus_path = "tests/corpus/repos/soroban-cost-profiler/vendor/ed25519-dalek-2.1.1/.cargo_vcs_info.json"
+sha256 = "ecdcc469c1fe769d40b4b3be1bfbfbc09474fd492c44af35ca53f1639c190bac"
+size_bytes = 107
+roles = ["source"]
+
+[[files]]
+repo = "soroban-cost-profiler"
+commit = "6d7ed9cbe92fabdf8612c7b02bb434962ac8abe3"
+source_path = "vendor/ed25519-dalek-2.1.1/Cargo.toml"
+corpus_path = "tests/corpus/repos/soroban-cost-profiler/vendor/ed25519-dalek-2.1.1/Cargo.toml"
+sha256 = "ca748353a41966dab5fc5856c3851112f9dd646143250e4ca4f3f99ecd84fd48"
+size_bytes = 3821
+roles = ["source"]
+
+[[files]]
+repo = "x402-facilitator-stellar"
+commit = "2aafe8d5db5e480844d935233121ec14cd8b3c48"
+source_path = ".github/workflows/bench.yml"
+corpus_path = "tests/corpus/repos/x402-facilitator-stellar/.github/workflows/bench.yml"
+sha256 = "015cbe56996b1b7ae61f16d761f8f351b54505e36576c7f4b0882305852b0091"
+size_bytes = 1775
+roles = ["workflow", "source"]
+
+[[files]]
+repo = "x402-facilitator-stellar"
+commit = "2aafe8d5db5e480844d935233121ec14cd8b3c48"
+source_path = ".github/workflows/ci.yml"
+corpus_path = "tests/corpus/repos/x402-facilitator-stellar/.github/workflows/ci.yml"
+sha256 = "312e2b16e43e8a6604a004b47c4133a13a0f6d0900e04a44e2ad60966999ac18"
+size_bytes = 6044
+roles = ["workflow", "source"]
+
+[[files]]
+repo = "x402-facilitator-stellar"
+commit = "2aafe8d5db5e480844d935233121ec14cd8b3c48"
+source_path = ".github/workflows/conformance-run.yml"
+corpus_path = "tests/corpus/repos/x402-facilitator-stellar/.github/workflows/conformance-run.yml"
+sha256 = "7d425383e4d0fa4decc197e4d93a94b29b78dd5a3ae3583da9fb6f7d4e5bb217"
+size_bytes = 13686
+roles = ["workflow", "source"]
+
+[[files]]
+repo = "x402-facilitator-stellar"
+commit = "2aafe8d5db5e480844d935233121ec14cd8b3c48"
+source_path = ".github/workflows/conformance.yml"
+corpus_path = "tests/corpus/repos/x402-facilitator-stellar/.github/workflows/conformance.yml"
+sha256 = "12db8044afa3151c06101d35e75e1c3ee86d33e4ab3856a962eda991c5f12ab4"
+size_bytes = 1561
+roles = ["workflow", "source"]
+
+[[files]]
+repo = "x402-facilitator-stellar"
+commit = "2aafe8d5db5e480844d935233121ec14cd8b3c48"
+source_path = ".github/workflows/docs-links.yml"
+corpus_path = "tests/corpus/repos/x402-facilitator-stellar/.github/workflows/docs-links.yml"
+sha256 = "315758e251f259586a3af76b7e3595bb4d1aafcf8a2019c451b20be6edb35515"
+size_bytes = 2576
+roles = ["workflow", "source"]
+
+[[files]]
+repo = "x402-facilitator-stellar"
+commit = "2aafe8d5db5e480844d935233121ec14cd8b3c48"
+source_path = ".github/workflows/external-monitor.yml"
+corpus_path = "tests/corpus/repos/x402-facilitator-stellar/.github/workflows/external-monitor.yml"
+sha256 = "d4cd6bacf7a03dd23231bf144c2258bd4d4c900c89850102e8651ad66699aea1"
+size_bytes = 2658
+roles = ["workflow", "source"]
+
+[[files]]
+repo = "x402-facilitator-stellar"
+commit = "2aafe8d5db5e480844d935233121ec14cd8b3c48"
+source_path = ".github/workflows/malware-scan.yml"
+corpus_path = "tests/corpus/repos/x402-facilitator-stellar/.github/workflows/malware-scan.yml"
+sha256 = "781027fba324526598ddb47d969b1d9abbd4c71ac8d0ab7e6a886094a16c0771"
+size_bytes = 3659
+roles = ["workflow", "source"]
+
+[[files]]
+repo = "x402-facilitator-stellar"
+commit = "2aafe8d5db5e480844d935233121ec14cd8b3c48"
+source_path = ".github/workflows/publish-status.yml"
+corpus_path = "tests/corpus/repos/x402-facilitator-stellar/.github/workflows/publish-status.yml"
+sha256 = "8e2a8b71fd913a7ef0db467511262353129f3829d94e060fcfcef2adf4da5de3"
+size_bytes = 885
+roles = ["workflow", "source"]
+
+[[files]]
+repo = "x402-facilitator-stellar"
+commit = "2aafe8d5db5e480844d935233121ec14cd8b3c48"
+source_path = ".github/workflows/scorecard.yml"
+corpus_path = "tests/corpus/repos/x402-facilitator-stellar/.github/workflows/scorecard.yml"
+sha256 = "7c601692575c3d9bfab046f2f7417ee6ebca64ed8b0ca14610ac5bde37ee0577"
+size_bytes = 3426
+roles = ["workflow", "source"]
+
+[[files]]
+repo = "x402-facilitator-stellar"
+commit = "2aafe8d5db5e480844d935233121ec14cd8b3c48"
+source_path = ".github/workflows/upstream-spec-watch.yml"
+corpus_path = "tests/corpus/repos/x402-facilitator-stellar/.github/workflows/upstream-spec-watch.yml"
+sha256 = "f15c671503a517b5f5ee048bfd0e2202dd2bd90d94517c1a26ab1cbc65d7c6e8"
+size_bytes = 5197
+roles = ["workflow", "source"]
+
+[[files]]
+repo = "x402-facilitator-stellar"
+commit = "2aafe8d5db5e480844d935233121ec14cd8b3c48"
+source_path = "eslint.config.mjs"
+corpus_path = "tests/corpus/repos/x402-facilitator-stellar/eslint.config.mjs"
+sha256 = "01d1fe44193e46639a54621e9a489794775dbb3c2dfd618bb400a9fc68791ec2"
+size_bytes = 2063
+roles = ["tooling-config", "source"]
+
+[[files]]
+repo = "x402-facilitator-stellar"
+commit = "2aafe8d5db5e480844d935233121ec14cd8b3c48"
+source_path = "examples/http-seller/package.json"
+corpus_path = "tests/corpus/repos/x402-facilitator-stellar/examples/http-seller/package.json"
+sha256 = "1e484a8d2424a4119f5f7da66be6d28631e0285f9355c1ae1ed26c458430ed4b"
+size_bytes = 328
+roles = ["package-manifest", "source"]
+
+[[files]]
+repo = "x402-facilitator-stellar"
+commit = "2aafe8d5db5e480844d935233121ec14cd8b3c48"
+source_path = "examples/mcp-agent/package.json"
+corpus_path = "tests/corpus/repos/x402-facilitator-stellar/examples/mcp-agent/package.json"
+sha256 = "f792193bdd2287fcb04b4c66b9f2af762897780545ad4317d9c31585dd373e9e"
+size_bytes = 207
+roles = ["package-manifest", "source"]
+
+[[files]]
+repo = "x402-facilitator-stellar"
+commit = "2aafe8d5db5e480844d935233121ec14cd8b3c48"
+source_path = "package.json"
+corpus_path = "tests/corpus/repos/x402-facilitator-stellar/package.json"
+sha256 = "a45a2604714061eeeedc8a725ee1b6d56f3a2f2b8e3267b6e77c5bdb18369a32"
+size_bytes = 3681
+roles = ["package-manifest", "source"]
+
+[[files]]
+repo = "x402-facilitator-stellar"
+commit = "2aafe8d5db5e480844d935233121ec14cd8b3c48"
+source_path = "test/fixtures/smart-account/Cargo.toml"
+corpus_path = "tests/corpus/repos/x402-facilitator-stellar/test/fixtures/smart-account/Cargo.toml"
+sha256 = "27c8aa45a97f525802da2e1c6f25692c48a9a4579d662e7e4c6c1f6f188c6d9a"
+size_bytes = 839
+roles = ["source"]
+
+[[files]]
+repo = "x402-facilitator-stellar"
+commit = "2aafe8d5db5e480844d935233121ec14cd8b3c48"
+source_path = "test/fixtures/smart_account.wasm"
+corpus_path = "tests/corpus/repos/x402-facilitator-stellar/test/fixtures/smart_account.wasm"
+sha256 = "bea0a7c2422edfc47fd7c3ce5986c19ccf72fe9a3729a0fe693b9df48d80b705"
+size_bytes = 5551
+roles = ["wasm"]

@@ -1,0 +1,274 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+    # `labeled` / `unlabeled` moved to changelog.yml, the only job that reads
+    # labels. Re-running this whole pipeline because someone toggled a label was
+    # the single most expensive trigger in the repo.
+    types: [ opened, synchronize, reopened ]
+
+# One job. `main` has no required status checks (protection exists but
+# `required_status_checks` is empty), so today a PR carries nine lines and the
+# merge can proceed with any of them red. What this file does NOT change:
+# every command that could fail a PR before still can. Two whole wasm builds
+# (`budget` and `build-wasm` ran byte-identical `cargo build --workspace
+# --exclude testutils` + `optimize_wasm.sh`), two wasm-size checks, and three
+# cargo caches were the cost.
+jobs:
+  ci:
+    name: ci
+    runs-on: ubuntu-latest
+    env:
+      # Pinned tool versions (Tollcraft). Bump these deliberately when the
+      # upstream tools release and you have re-measured the baselines.
+      SOROBAN_COST_LINTER_TAG: v0.1.1
+      SOROBAN_COST_LINTER_NIGHTLY: nightly-2026-04-16
+      DYLINT_VERSION: 6.0.1
+      # soroban-budget-assert is distributed from git (not crates.io). Pin to
+      # the released tag: upstream `main` is not guaranteed to compile (it can
+      # carry in-progress work, e.g. #592 broke cargo-budget-report's main.rs).
+      SOROBAN_BUDGET_ASSERT_REF: v0.1.0
+      # Funded testnet identity for the Tier B network-simulated report. Both
+      # Tier B steps are merge-only, so no PR run needs this. Fork PRs never
+      # receive secrets anyway; the explicit scoping is for PRs opened from a
+      # branch *inside* this repo, which do.
+      STELLAR_TESTNET_SECRET: ${{ github.event_name != 'pull_request' && secrets.STELLAR_TESTNET_SECRET || '' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+          targets: wasm32v1-none
+
+      - name: Cache cargo
+        # One key for one job. The old file had four near-identical keys
+        # (cargo-clippy-, cargo-test-, cargo-bench-, cargo-budget-,
+        # cargo-wasm-), so each job warmed its own copy of the same build.
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-ci-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: fmt
+        run: cargo fmt --all -- --check
+
+      - name: Build every contract to WASM
+        # One build serves clippy, the test suite, the Tier A budget macros and
+        # the size gate. Exclude `testutils`: it is a std crate (no `#![no_std]`)
+        # and its soroban-sdk `testutils` feature is not supported on wasm, so it
+        # cannot compile for wasm32v1-none. `--all-targets` lints and the
+        # contractimport!-using tests pull in receipt-shard, receipt-anchor and
+        # refund-vault, all inside this set.
+        run: cargo build --locked --workspace --exclude testutils --target wasm32v1-none --release
+
+      - name: Optimize wasms
+        # `deploy.sh` builds with `stellar contract build`, which optimizes the
+        # wasm before uploading it. Tests have to import and upload that same
+        # artifact: cargo's raw output is ~25% larger, and the unoptimized
+        # refund_vault blob (138631 B) is rejected outright by
+        # `upload_contract_wasm` because a contract code ledger entry is capped
+        # at 131072 B.
+        run: bash scripts/optimize_wasm.sh
+
+      - name: clippy
+        run: cargo clippy --locked --all-targets -- -D warnings
+
+      - name: Tests
+        # Includes `testutils`, which the `benchmark-budgets` job used to run
+        # again on its own under the `release-with-logs` profile.
+        run: cargo test --locked --workspace
+
+      - name: Install stellar-cli for WASM budget inspection
+        # Merges only. This is a multi-minute source build, and its only
+        # consumer is the informational `soroban contract inspect --wasm` block
+        # in the budget script below (that block runs `|| true` per contract, so
+        # it cannot fail a run either way). The size gate does not need it.
+        if: github.event_name != 'pull_request'
+        run: |
+          if command -v stellar &>/dev/null; then
+            echo "stellar-cli already installed"
+          else
+            cargo install --locked stellar-cli 2>/dev/null || echo "stellar-cli install skipped"
+          fi
+
+      - name: WASM size budget
+        # The binding gate is this script, not the inline loops that used to run
+        # in the `budget-limits` and `build-wasm` jobs: it checks the union of the
+        # script's contract list and every key in `.wasm-budget.json` with NO
+        # tolerance, plus the 131072-byte ledger-entry deploy limit. A missing
+        # artifact, a missing or non-numeric budget entry, or a missing/broken
+        # `jq` is a hard failure, so nothing is silently dropped from the gate
+        # (issue #623). The inline loops covered 5 contracts at baseline * 1.10,
+        # so anything they rejected the script had already rejected. That is why
+        # `WASM_SIZE_TOLERANCE` is gone: the advertised 10% slack has never
+        # actually been granted on a PR.
+        run: bash scripts/check_wasm_budget.sh
+
+      - name: Tier A budget assertions
+        # Compiles the contracts for the host and runs the `#[budget_cpu_lt(N)]`
+        # macro tests. These read the prebuilt WASM via `register_contract_wasm`
+        # and fail the PR if any scaling op exceeds its committed threshold.
+        run: cargo test -p receipt-anchor -p refund-vault -p state-channel -p upto-authorization --features budget-assert
+
+      - id: vector-parity-local
+        name: Vector parity, local half
+        # Keep the two repos' Merkle vectors from silently drifting. Divergence
+        # must fail a build, not produce a warning (issue #53). Regenerates
+        # src/vectors.rs from merkle-vectors.json and fails if it drifted, and
+        # fails if merkle-vectors.json.sha256 is stale.
+        run: node contracts/receipt-anchor/scripts/build-vectors.mjs --check
+
+      - id: vector-parity-hash
+        name: Vector parity, cross-repo hash
+        # Pinned via ACCENSA_APP_REF (issue #556); guard fails loudly when absent.
+        env:
+          ACCENSA_APP_REF: ${{ vars.ACCENSA_APP_REF }}
+          # On a PR we have not yet synced accensa-app, so a hash mismatch must
+          # not block the PR itself — it is reported as a warning. On main,
+          # schedule, dispatch and manual runs the same mismatch is a hard
+          # failure, which is the whole point of issue #53.
+          STRICT: ${{ github.event_name == 'pull_request' && 'false' || 'true' }}
+        run: |
+          REF="${ACCENSA_APP_REF}"
+          if [ -z "$REF" ]; then
+            echo "::error::Repository variable ACCENSA_APP_REF is absent or empty. Maintainers must configure ACCENSA_APP_REF in repository variables."
+            if [ "$STRICT" = "true" ]; then
+              echo "::error::Failing build because ACCENSA_APP_REF is required on strict runs."
+              exit 1
+            fi
+            echo "::warning::vars.ACCENSA_APP_REF is absent; falling back to 'main' for non-strict pull_request run."
+            REF="main"
+          fi
+          echo "Resolved accensa-app ref: ${REF}"
+
+          URL="https://raw.githubusercontent.com/accensa/accensa-app/${REF}/packages/sdk/merkle-vectors.json"
+          echo "Fetching ${URL}"
+          if curl -fsSL "$URL" -o /tmp/sdk-merkle-vectors.json; then
+            SDK_HASH=$(sha256sum /tmp/sdk-merkle-vectors.json | cut -d' ' -f1)
+            LOCAL_HASH=$(tr -d '[:space:]' < contracts/receipt-anchor/merkle-vectors.json.sha256)
+            echo "SDK hash (accensa-app@${REF}):   ${SDK_HASH}"
+            echo "Local hash (this repo):          ${LOCAL_HASH}"
+            if [ "$SDK_HASH" != "$LOCAL_HASH" ]; then
+              if [ "$STRICT" = "true" ]; then
+                echo "::error::merkle-vectors.json diverged from accensa-app@${REF}."
+                echo "::error::Bring the two repos in sync: update both copies of merkle-vectors.json"
+                echo "::error::AND both committed .sha256 files, then pin ACCENSA_APP_REF. The"
+                echo "::error::cross-implementation proof-of-parity is broken until you do."
+                exit 1
+              fi
+              echo "::warning::merkle-vectors.json diverged from accensa-app@${REF}."
+              echo "::warning::This is expected until accensa-app vendors the new canonical vectors"
+              echo "::warning::(see cross-repo/accensa-app/README.md). Once both repos carry the"
+              echo "::warning::same hash this becomes a hard failure instead of a warning."
+            else
+              echo "Vector fixture matches accensa-app@${REF}."
+            fi
+          else
+            echo "::warning::Could not fetch accensa-app@${REF} merkle-vectors.json."
+            echo "::warning::This usually means accensa-app has not yet vendored the canonical"
+            echo "::warning::vectors (see docs/CONFORMANCE.md). The divergence guard is active but"
+            echo "::warning::cannot verify until the SDK copy exists. Open the accensa-app PR."
+          fi
+
+      # --- Tollcraft dogfood: static cost linting ---
+      - name: Install soroban-cost-linter (pinned)
+        run: |
+          rustup toolchain install "$SOROBAN_COST_LINTER_NIGHTLY" --component rustc-dev --component llvm-tools-preview
+          cargo install cargo-dylint dylint-link --version "$DYLINT_VERSION" --locked
+          cargo +"$SOROBAN_COST_LINTER_NIGHTLY" install \
+            --git https://github.com/Tollcraft/soroban-cost-linter.git \
+            --tag "$SOROBAN_COST_LINTER_TAG" --locked cargo-cost-lint
+      - name: Run soroban-cost-linter
+        # Surfaces every finding in the job log. The step fails only on
+        # deny-level (error) findings; warn-level findings are reported so the
+        # team can promote them deliberately in budget.toml. Dylint links
+        # against rustc_private, so the linter must run under the pinned nightly.
+        run: |
+          echo "### soroban-cost-linter findings" >> $GITHUB_STEP_SUMMARY
+          cargo +"$SOROBAN_COST_LINTER_NIGHTLY" cost-lint --workspace --format text | tee -a "$GITHUB_STEP_SUMMARY" || true
+
+      # --- Stage 2: soroban-budget-assert Tier B (network-verified report) ---
+      - name: Install cargo-budget-report (pinned)
+        # Merge-only. `cargo install --git` of this crate was the PR-time cost;
+        # the report it produces is checked against committed baselines, which is
+        # a property of the merged tree, not of one proposed diff.
+        if: github.event_name != 'pull_request'
+        run: |
+          cargo install --git https://github.com/Tollcraft/soroban-budget-assert.git \
+            --tag "$SOROBAN_BUDGET_ASSERT_REF" --locked cargo-budget-report
+      - name: Run cargo budget-report (Tier B)
+        # Requires a funded testnet identity; only runs in post-merge runs
+        # where STELLAR_TESTNET_SECRET is set. Enabled in PR #244, this step runs
+        # `cargo budget-report --check` to enforce the committed `[functions.*]`
+        # baselines in budget.toml (anchor_batch_*, verify_receipt_*, prune_batches_100,
+        # refund, deposit) with a 15% tolerance ceiling against testnet simulation.
+        if: ${{ github.event_name != 'pull_request' && env.STELLAR_TESTNET_SECRET != '' }}
+        run: |
+          echo "$STELLAR_TESTNET_SECRET" | stellar keys add alice --network testnet --secret-key-stdin
+          cargo budget-report --check --json | tee budget-report.json
+          echo "### Tier B budget report" >> $GITHUB_STEP_SUMMARY
+          cat budget-report.json >> $GITHUB_STEP_SUMMARY
+
+      - name: Notify accensa-app on vector change
+        # Was its own `notify-vector-parity` job with `needs: vector-parity`. As
+        # a plain step it would have inherited a dependency on every earlier
+        # step, so a cost-linter or Tier B failure on `main` would have silently
+        # dropped the dispatch. `always() && !cancelled()` plus the two parity
+        # outcomes removes that: only those two results are consulted. Not a
+        # full restoration — a failure *before* the parity steps still leaves
+        # them skipped and the dispatch unfired, which the next green run on
+        # `main` does send. One job cannot both serialize and stay independent.
+        if: ${{ always() && !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.vector-parity-local.outcome == 'success' && steps.vector-parity-hash.outcome == 'success' }}
+        # When this repo's vectors change, tell accensa-app's parity job to run
+        # so a stale SDK copy is caught promptly rather than only on its schedule.
+        uses: peter-evans/repository-dispatch@v4
+        continue-on-error: true
+        with:
+          token: ${{ secrets.ACCENSA_APP_PAT }}
+          repository: accensa/accensa-app
+          event-type: accensa-contracts-vector-update
+          client-payload: '{"ref": "${{ github.sha }}"}'
+
+      - name: cargo deny
+        # Supply-chain gate (issue #554): `deny.toml` was committed but nothing
+        # ever ran it, so its policy was unenforced. Runs advisories, bans,
+        # licenses and sources against the *locked* workspace: the metadata
+        # step below fails if Cargo.toml and Cargo.lock disagree instead of
+        # silently re-resolving.
+        #
+        # The tool is pinned to the version `deny.toml` is written for (the
+        # config format is tied to the tool version — the file this repo carried
+        # before was rejected outright by 0.20.2 — so an unpinned cargo-deny
+        # could start rejecting `deny.toml` on a later release). The binary and the advisory
+        # database both live under `target/` (`db-path` in deny.toml), so the
+        # "Cache cargo" step above carries them between runs; the version check
+        # rebuilds the binary when the pin below changes.
+        run: |
+          set -euo pipefail
+          DENY_VERSION="0.20.2"
+          DENY_ROOT="target/cargo-deny-tools"
+          DENY_BIN="$DENY_ROOT/bin/cargo-deny"
+          if ! "$DENY_BIN" --version 2>/dev/null | grep -q " ${DENY_VERSION}$"; then
+            cargo install cargo-deny --version "$DENY_VERSION" --locked --root "$DENY_ROOT"
+          fi
+          cargo metadata --locked --format-version 1 > "$RUNNER_TEMP/cargo-metadata.json"
+          "$DENY_BIN" --metadata-path "$RUNNER_TEMP/cargo-metadata.json" check
+
+      - name: Deploy smoke test (dry-run)
+        # Issue #555: runs deploy.sh argument parsing, validation, and safety checks in dry-run.
+        run: bash tests/test_deploy.sh
+
+      - name: Differential fuzz harness
+        # Issue #555: runs bounded campaign with documented iteration count for invariant testing.
+        run: |
+          rustc --test tests/differential/bolero_test.rs -o target/bolero_test
+          ./target/bolero_test --nocapture
+

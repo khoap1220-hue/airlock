@@ -1,0 +1,132 @@
+name: CI
+
+on:
+  push:
+    branches: ['main']
+  pull_request:
+
+# A second push to a PR cancels the first: the older run's result is about code
+# nobody will merge.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# One job, one `npm ci`, one check line. Previously this file was ten jobs that
+# each checked out, set up Node and ran `npm ci` over the same lockfile; on the
+# last `main` run (420) that cost 343 runner-seconds across 11 check lines for
+# ~220s of actual work. Every guard below is kept, in cheap-to-expensive order,
+# with `audit` last so a dependency advisory cannot mask whether the tests
+# passed. Steps abort on the first failure, so the check line is red for the
+# earliest broken guard and the step list names it.
+jobs:
+  ci:
+    name: ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          # Single version now. `package.json` still declares `engines: >= 20`;
+          # nothing in CI exercises Node 20 any more, so that claim is
+          # unverified until it is either re-tested or narrowed.
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Check formatting
+        # --check, never --write. CI reports; it does not silently rewrite the
+        # code under review.
+        run: npm run format:check
+
+      - name: Test suite
+        # No network, no funded account, no .env. The end-to-end conformance
+        # run needs testnet and lives in its own workflow.
+        run: npm test
+
+      - name: Licence policy
+        # This project commits to a permissive OSI licence with no AGPL in the
+        # dependency path. That commitment is enforced here rather than
+        # asserted in a README.
+        run: node scripts/check-licenses.mjs --list
+
+      - name: Environment documentation
+        # Issue #144: .env.example is the operator's setup reference; a variable
+        # read in src/ that is not documented there is an invisible default, and
+        # for the spend-limit variables a money question. The check runs both
+        # ways: a variable documented there that no code reads is a promise the
+        # service never keeps, and fails too — unless the allowlist in the
+        # script excuses it with a citation to the code that reads it.
+        run: npm run env:check
+
+      - name: Migration compatibility
+        # Zero-downtime migration guardrail: blocks schema changes that break
+        # backward compatibility (DROP in expand, RENAME, LOCK TABLE, etc.).
+        # See docs/MIGRATIONS.md for the full rule set.
+        run: npm run check:migration
+
+      - name: Search evaluation
+        run: npm run eval
+
+      - name: Examples install and smoke test
+        # Issue #190: this used to start each example with `&`, sleep, and kill
+        # %1 - so a broken example still produced a green check. Each example is
+        # now installed (a genuine dependency check) and exercised by
+        # scripts/smoke-examples.mjs, which starts it, polls until it is
+        # actually serving, asserts real behaviour (a 402 PAYMENT-REQUIRED
+        # challenge for the seller, an MCP initialize/tools-list for the agent)
+        # and fails on any broken assertion.
+        run: |
+          set -euo pipefail
+          (cd examples/http-seller && npm ci)
+          (cd examples/mcp-agent && npm ci)
+          npm run smoke:examples
+
+      - name: Dependency audit
+        # The decision command is unchanged: `npm audit --audit-level=high`
+        # against the tree `npm ci` just installed.
+        #
+        # What is added is the diagnostics, because the report npm prints names
+        # the *advisory range* ("proxy-addr 1.1.0 - 2.0.7"), not the version the
+        # lockfile resolved. A red run therefore cannot be read as "in range" vs
+        # "already patched past the range" without re-running npm by hand, and it
+        # does not say whether the offending package is a dev or a production
+        # dependency - which is the difference between "bump it" and "do not bump
+        # a production dependency to clear a dev-only advisory".
+        #
+        # `npm audit --package-lock-only` audits the lockfile without installing
+        # and can disagree with the installed-tree audit when the tree dedupes or
+        # prunes differently. Its output is printed for comparison only: the
+        # installed tree is what this service ships, so that is what CI trusts.
+        run: |
+          rc=0
+          npm audit --audit-level=high || rc=$?
+          if [ "$rc" -ne 0 ]; then
+            echo
+            echo "### Resolved versions this audit rejected"
+            npm audit --json > /tmp/npm-audit.json || true
+            node -e '
+              const fs = require("node:fs");
+              const audit = JSON.parse(fs.readFileSync("/tmp/npm-audit.json", "utf8"));
+              const lock = JSON.parse(fs.readFileSync("package-lock.json", "utf8"));
+              const entries = Object.entries(audit.vulnerabilities || {});
+              if (entries.length === 0) console.log("  (nothing reported - the non-zero exit came from the audit endpoint)");
+              for (const [, v] of entries) {
+                for (const nodePath of v.nodes || []) {
+                  const pkg = lock.packages[nodePath] || {};
+                  console.log(
+                    `  - ${nodePath}: resolved ${pkg.version ?? "NOT IN LOCKFILE"} [${pkg.dev ? "dev dependency" : "production dependency"}]` +
+                      ` | advisory range ${v.range} | severity ${v.severity}` +
+                      ` | ${v.fixAvailable ? "fix available via npm audit fix" : "no automatic fix"}`,
+                  );
+                }
+              }
+            '
+            echo
+            echo "### Lockfile-only audit, for comparison (CI's decision is the installed-tree audit above)"
+            npm audit --package-lock-only --audit-level=high || true
+          fi
+          exit "$rc"

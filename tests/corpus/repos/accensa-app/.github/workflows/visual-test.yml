@@ -1,0 +1,58 @@
+name: Visual regression
+
+# Runs on merge, not on the PR. The e2e suite in ci.yml deliberately ignores
+# visual.spec.ts (see apps/web/playwright.e2e.config.ts `testIgnore`), so this
+# is the only guard for the committed screenshots — which is why it stays rather
+# than being deleted. What moving it off the PR path costs: a visual regression
+# is found after it lands on main instead of before it merges. `pnpm
+# test:visual:update` already lets an author bless a change without review, so
+# the pre-merge check was never enforcing snapshot stability anyway. Fire this
+# manually on a branch that touches layout before merging if you want the diff
+# pre-merge.
+on:
+  push:
+    branches: ['main']
+    paths:
+      - 'apps/web/**'
+      - '.github/workflows/visual-test.yml'
+  workflow_dispatch:
+
+jobs:
+  visual:
+    name: playwright (web)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ./apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.28.5
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        working-directory: .
+      - name: Install Playwright browsers
+        # Every visual project runs in Chromium (see playwright.config.ts).
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Run visual tests
+        env:
+          JWT_SECRET_KEY: visual-regression-test-secret
+          CI: true
+        run: pnpm test:visual
+      - name: Upload failure snapshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-visual-diff
+          path: |
+            apps/web/e2e/__screenshots__
+            apps/web/test-results
+          if-no-files-found: ignore

@@ -1,0 +1,76 @@
+[workspace]
+members = [".", "fixtures/dummy-contract"]
+resolver = "2"
+
+[patch.crates-io]
+# Force the whole workspace (including soroban-env-host) to use ed25519-dalek 2.1.1.
+# The crates.io resolver otherwise picks 3.0.x for soroban-env-host, whose rand_core
+# traits are incompatible with soroban-env-host's testutils code.
+ed25519-dalek = { path = "vendor/ed25519-dalek-2.1.1" }
+
+[package]
+name = "soroban-cost-profiler"
+version = "0.1.0"
+edition = "2024"
+description = "Visual flamegraphs and execution tracing for Soroban smart contracts"
+authors = ["Tollcraft"]
+repository = "https://github.com/Tollcraft/soroban-cost-profiler"
+license = "Apache-2.0"
+
+[dependencies]
+soroban-env-host = { version = "28.0.2", features = ["recording_mode"] }
+soroban-ledger-snapshot = "28.0.0"
+tracing = "0.1.44"
+# #214: every stage has logged through `tracing` since the tracer was written, and nothing ever
+# installed a subscriber, so those records were discarded — a profiler whose `info!` lines reach no
+# terminal is a library with a logging system and no reader. `default-features = false` is the
+# deliberate small half: `fmt` alone, without `ansi` (no escape codes, ever, which is what keeps
+# `docs/troubleshooting.md`'s "stderr is exactly the messages we chose" true when `-v` is on),
+# without `tracing-log` (this CLI bridges nothing), and without `env-filter` (verbosity is a clap
+# flag, not `RUST_LOG`, so `matchers`/`regex-automata` stay out of the tree).
+tracing-subscriber = { version = "0.3.23", default-features = false, features = ["fmt"] }
+wasmi = "2.0.0"
+# Phase 3, #142. Both were already resolved in Cargo.lock at these versions by `backtrace`, so
+# this changes no existing version; the lock gains two small pure-Rust crates that gimli's
+# features need (`stable_deref_trait`, `fallible-iterator`) and nothing else.
+# `default-features = false` is what keeps `cpp_demangle`, `object` and `memmap2` out: the WASM
+# custom sections are read as raw bytes and handed to `addr2line::Context::from_dwarf`, and C++
+# demangling is not a case this pipeline will ever see. `std` is not optional in practice —
+# `EndianRcSlice` requires `Rc<[u8]>: CloneStableDeref`, which `stable_deref_trait` only
+# implements with its own `std` feature on.
+addr2line = { version = "0.25.1", default-features = false, features = ["rustc-demangle", "std"] }
+# `gimli` has to be a direct dependency, not reached through `addr2line::gimli`: addr2line's own
+# dependency is `features = ["read"]`, which excludes `endian-reader`, and `endian-reader` is what
+# provides the owned `EndianRcSlice` a mapper that outlives the caller's buffer needs. Naming it
+# here is also the honest dependency — the section loading in `src/source_map/dwarf.rs` is gimli's
+# code, not a hand-written DWARF parser, which is what `AGENTS.md` requires.
+gimli = { version = "0.32.3", default-features = false, features = ["read", "endian-reader", "std"] }
+clap = { version = "=4.5.0", features = ["derive"] }
+# #215: `--format json` writes the call tree as structured data. `serde_json` was already resolved in
+# `Cargo.lock` at this version by `soroban-env-host`'s own snapshot types, so declaring it here changes
+# no version and adds no new crate to the tree — only the one direct edge the formatter needs. It is
+# used through `Value`/`Map` rather than `#[derive(Serialize)]`, which keeps `serde`'s derive machinery
+# (`serde_derive`, and a procedural macro build) out of a crate that has no type to annotate.
+serde_json = "1.0.151"
+
+[profile.release]
+opt-level = "z"
+
+# Phase 3 prerequisite, found while documenting `src/source_map.rs`: release builds strip debug
+# info, so `dummy_contract.wasm` shipped no `.debug_*` section at all and no test could assert a
+# `file:line`. Line tables are what source mapping needs and cost far less than full `-g`.
+# Per-package only, so the profiler binary's own release build is unchanged.
+[profile.release.package.dummy-contract]
+debug = "line-tables-only"
+
+[dev-dependencies]
+criterion = "0.8.2"
+tempfile = "3.27.0"
+
+[[bench]]
+name = "tracer_benchmark"
+harness = false
+
+[[bench]]
+name = "source_map_benchmark"
+harness = false

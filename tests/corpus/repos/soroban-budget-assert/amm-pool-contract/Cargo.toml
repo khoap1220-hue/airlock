@@ -1,0 +1,22 @@
+[package]
+name = "amm-pool-contract"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+soroban-sdk = "27.0.3"
+
+[dev-dependencies]
+soroban-sdk = { version = "27.0.3", features = ["testutils"] }
+budget-macros = { path = "../budget-macros" }
+
+[features]
+# Selects the pre-SDK-22 `env.budget()` measurement path in
+# tests/calibrate_gap_sdk20.rs. It switches no dependency: the SDK version is
+# whatever `[dependencies]` pins, so pair it with a pin applied first (see
+# calibrate_gap.ps1) or the harness reports the pinned SDK's costs.
+sdk20 = []

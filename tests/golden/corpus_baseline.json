@@ -1,0 +1,179 @@
+{
+  "description": "Golden findings baseline for tests/corpus across the 6 dogfood repositories (Issue #26, task 0.10).",
+  "findings": [
+    {
+      "evidence": "#     tasks, pull_request_target checkouts and committed native binaries.",
+      "line": 7,
+      "message": "Workflow trigger that runs base-context code with a write token",
+      "path": "tests/corpus/repos/accensa-app/.github/workflows/malware-scan.yml",
+      "roles": [
+        "workflow",
+        "source"
+      ],
+      "rule_id": "pat-privileged-trigger",
+      "severity": "warn",
+      "suppressed_by": null,
+      "suppressible": true
+    },
+    {
+      "evidence": "# Runs on `pull_request` (never `pull_request_target`) with a read-only token,",
+      "line": 12,
+      "message": "Workflow trigger that runs base-context code with a write token",
+      "path": "tests/corpus/repos/accensa-app/.github/workflows/malware-scan.yml",
+      "roles": [
+        "workflow",
+        "source"
+      ],
+      "rule_id": "pat-privileged-trigger",
+      "severity": "warn",
+      "suppressed_by": null,
+      "suppressible": true
+    },
+    {
+      "evidence": "#     tasks, pull_request_target checkouts and committed native binaries.",
+      "line": 7,
+      "message": "Workflow trigger that runs base-context code with a write token",
+      "path": "tests/corpus/repos/accensa-contracts/.github/workflows/malware-scan.yml",
+      "roles": [
+        "workflow",
+        "source"
+      ],
+      "rule_id": "pat-privileged-trigger",
+      "severity": "warn",
+      "suppressed_by": null,
+      "suppressible": true
+    },
+    {
+      "evidence": "# Runs on `pull_request` (never `pull_request_target`) with a read-only token,",
+      "line": 12,
+      "message": "Workflow trigger that runs base-context code with a write token",
+      "path": "tests/corpus/repos/accensa-contracts/.github/workflows/malware-scan.yml",
+      "roles": [
+        "workflow",
+        "source"
+      ],
+      "rule_id": "pat-privileged-trigger",
+      "severity": "warn",
+      "suppressed_by": null,
+      "suppressible": true
+    },
+    {
+      "evidence": "#     tasks, pull_request_target checkouts and committed native binaries.",
+      "line": 7,
+      "message": "Workflow trigger that runs base-context code with a write token",
+      "path": "tests/corpus/repos/soroban-budget-assert/.github/workflows/malware-scan.yml",
+      "roles": [
+        "workflow",
+        "source"
+      ],
+      "rule_id": "pat-privileged-trigger",
+      "severity": "warn",
+      "suppressed_by": null,
+      "suppressible": true
+    },
+    {
+      "evidence": "# Runs on `pull_request` (never `pull_request_target`) with a read-only token,",
+      "line": 12,
+      "message": "Workflow trigger that runs base-context code with a write token",
+      "path": "tests/corpus/repos/soroban-budget-assert/.github/workflows/malware-scan.yml",
+      "roles": [
+        "workflow",
+        "source"
+      ],
+      "rule_id": "pat-privileged-trigger",
+      "severity": "warn",
+      "suppressed_by": null,
+      "suppressible": true
+    },
+    {
+      "evidence": "#     tasks, pull_request_target checkouts and committed native binaries.",
+      "line": 7,
+      "message": "Workflow trigger that runs base-context code with a write token",
+      "path": "tests/corpus/repos/soroban-cost-linter/.github/workflows/malware-scan.yml",
+      "roles": [
+        "workflow",
+        "source"
+      ],
+      "rule_id": "pat-privileged-trigger",
+      "severity": "warn",
+      "suppressed_by": null,
+      "suppressible": true
+    },
+    {
+      "evidence": "# Runs on `pull_request` (never `pull_request_target`) with a read-only token,",
+      "line": 12,
+      "message": "Workflow trigger that runs base-context code with a write token",
+      "path": "tests/corpus/repos/soroban-cost-linter/.github/workflows/malware-scan.yml",
+      "roles": [
+        "workflow",
+        "source"
+      ],
+      "rule_id": "pat-privileged-trigger",
+      "severity": "warn",
+      "suppressed_by": null,
+      "suppressible": true
+    },
+    {
+      "evidence": "#     tasks, pull_request_target checkouts and committed native binaries.",
+      "line": 7,
+      "message": "Workflow trigger that runs base-context code with a write token",
+      "path": "tests/corpus/repos/soroban-cost-profiler/.github/workflows/malware-scan.yml",
+      "roles": [
+        "workflow",
+        "source"
+      ],
+      "rule_id": "pat-privileged-trigger",
+      "severity": "warn",
+      "suppressed_by": null,
+      "suppressible": true
+    },
+    {
+      "evidence": "# Runs on `pull_request` (never `pull_request_target`) with a read-only token,",
+      "line": 12,
+      "message": "Workflow trigger that runs base-context code with a write token",
+      "path": "tests/corpus/repos/soroban-cost-profiler/.github/workflows/malware-scan.yml",
+      "roles": [
+        "workflow",
+        "source"
+      ],
+      "rule_id": "pat-privileged-trigger",
+      "severity": "warn",
+      "suppressed_by": null,
+      "suppressible": true
+    },
+    {
+      "evidence": "#     tasks, pull_request_target checkouts and committed native binaries.",
+      "line": 7,
+      "message": "Workflow trigger that runs base-context code with a write token",
+      "path": "tests/corpus/repos/x402-facilitator-stellar/.github/workflows/malware-scan.yml",
+      "roles": [
+        "workflow",
+        "source"
+      ],
+      "rule_id": "pat-privileged-trigger",
+      "severity": "warn",
+      "suppressed_by": null,
+      "suppressible": true
+    },
+    {
+      "evidence": "# Runs on `pull_request` (never `pull_request_target`) with a read-only token,",
+      "line": 12,
+      "message": "Workflow trigger that runs base-context code with a write token",
+      "path": "tests/corpus/repos/x402-facilitator-stellar/.github/workflows/malware-scan.yml",
+      "roles": [
+        "workflow",
+        "source"
+      ],
+      "rule_id": "pat-privileged-trigger",
+      "severity": "warn",
+      "suppressed_by": null,
+      "suppressible": true
+    }
+  ],
+  "total_findings": 12,
+  "total_high": 0,
+  "total_info": 0,
+  "total_scanned_files": 107,
+  "total_warn": 12,
+  "version": 1
+}

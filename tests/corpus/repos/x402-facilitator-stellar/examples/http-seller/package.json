@@ -1,0 +1,16 @@
+{
+  "name": "example-http-seller",
+  "type": "module",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@x402/core": "^2.21.0",
+    "@x402/express": "^2.21.0",
+    "@x402/stellar": "^2.21.0",
+    "@stellar/stellar-sdk": "^16.2.0",
+    "express": "^4.19.2"
+  }
+}

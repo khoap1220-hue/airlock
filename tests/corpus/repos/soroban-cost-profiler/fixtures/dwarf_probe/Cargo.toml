@@ -1,0 +1,23 @@
+[package]
+name = "dwarf-probe"
+version = "0.1.0"
+edition = "2021"
+
+# This crate is test *data*, not a build target: nothing in the workspace compiles it, and
+# `cargo test --workspace` must not try (it is `#![no_std]` with `panic = "abort"`). Its artifacts
+# are committed and read with `include_bytes!`. Being its own workspace root is what keeps it out
+# of the enclosing one — `workspace.exclude` does not, because cargo only consults that for
+# `members` globs and this workspace lists its members explicitly.
+[workspace]
+
+[lib]
+crate-type = ["cdylib"]
+
+[profile.release]
+opt-level = "z"
+# The point of this crate: a binary small enough to commit that carries real Rust DWARF.
+# `std` is what makes DWARF-bearing wasm huge (1.6 MB for three functions), because every
+# inlined dependency contributes debug info; `#![no_std]` + `panic = "abort"` brings the same
+# sections down to 1.7 KB. See README.md.
+debug = 1
+panic = "abort"

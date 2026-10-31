@@ -1,0 +1,189 @@
+name: CI
+
+on:
+  push:
+    branches: ['main']
+  pull_request:
+    branches: ['main']
+
+# One job, one status check line. This file used to declare ten jobs — format,
+# lint, test-sdk, test-web, test-reconcile, test-config, typecheck, build,
+# verify-pack, e2e — which is ten runner lifecycles, ten `pnpm install
+# --frozen-lockfile` runs and zero cache (main run 595: 639 runner-seconds
+# across 10 check lines, 160s wall clock). Every step below is one of those
+# jobs' steps, in dependency order, after a single install. Nothing was
+# weakened: each `run` is the same command the removed job ran.
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    services:
+      # Only `pnpm --filter web test` reads a database, and the old test-web
+      # job was the only one that had this service. Job-scoped services stay up
+      # for the whole job, so it is present exactly when the web tests run.
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: accensa_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+
+      # Before setup-node, and pinned. Combined with setup-node's `cache: pnpm`
+      # this is the ordering the action documents; `npm install -g pnpm@11` into
+      # whichever node happens to be active first is not. 11.28.5 is what
+      # `pnpm@11` resolves to on npm today, so the toolchain is unchanged.
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.28.5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check formatting
+        run: pnpm format:check
+
+      # Lints apps/web from the root.
+      # packages/sdk has no ESLint config; typecheck covers it in the typecheck step.
+      # apps/docs (Docusaurus) and apps/demo-merchant (example JS) are excluded.
+      # The `@accensa/sdk` half of this script is an `echo` — see issue #511.
+      - name: Lint workspace packages
+        run: pnpm lint
+
+      # Unit tests for /.prettierrc.json5: file integrity, option catalogue,
+      # value schema, resolution and behaviour. No services required.
+      - name: Test Prettier configuration
+        run: pnpm test
+
+      - name: Build SDK
+        working-directory: ./packages/sdk
+        run: pnpm build
+
+      - name: Test SDK
+        working-directory: ./packages/sdk
+        run: pnpm test
+
+      - name: Verify generated API types are reproducible
+        run: |
+          pnpm --filter @accensa/sdk gen:api
+          git diff --exit-code -- packages/sdk/generated/api-types.ts
+
+      - name: Verify conformance vectors are reproducible
+        run: |
+          node packages/sdk/scripts/generate-vectors.mjs
+          git diff --exit-code -- packages/sdk/merkle-vectors.json packages/sdk/vectors.rs
+
+      # Unit tests only: synthetic and fixture data, no live RPC or database.
+      # The live reconciliation itself runs on a schedule, in reconcile.yml.
+      - name: Test reconcile-payments
+        working-directory: ./scripts/reconcile-payments
+        run: pnpm test
+
+      - name: Test web
+        working-directory: ./apps/web
+        env:
+          DATABASE_URL: postgres://postgres:password@localhost:5432/accensa_test
+        run: pnpm test
+
+      # Typechecks apps/web and packages/sdk from the root.
+      # apps/docs is not built or typechecked in CI (Pages claims dropped).
+      # apps/demo-merchant is plain JavaScript and has no TypeScript to check.
+      - name: Typecheck workspace packages
+        run: pnpm typecheck
+
+      - name: Build Next.js app
+        working-directory: ./apps/web
+        run: pnpm build
+
+      - name: Pack SDK tarball
+        working-directory: ./packages/sdk
+        run: pnpm pack --pack-destination /tmp/sdk-tarball
+
+      - name: Verify tarball installs and imports in ESM and CJS
+        run: |
+          TARBALL=$(ls /tmp/sdk-tarball/*.tgz)
+
+          # Create scratch project outside the workspace
+          SCRATCH=$(mktemp -d)
+          cd "$SCRATCH"
+          npm init -y > /dev/null 2>&1
+          npm install "$TARBALL" > /dev/null 2>&1
+
+          # Test CJS import
+          node -e "
+            const sdk = require('@accensa/sdk');
+            if (typeof sdk.verifyReceipt !== 'function') throw new Error('verifyReceipt not exported');
+            if (typeof sdk.attachAccensaHook !== 'function') throw new Error('attachAccensaHook not exported');
+            if (typeof sdk.createSettleHook !== 'function') throw new Error('createSettleHook not exported');
+            console.log('CJS: root entry OK');
+          "
+
+          # Test CJS merkle import
+          node -e "
+            const merkle = require('@accensa/sdk/merkle');
+            if (typeof merkle.verifyReceipt !== 'function') throw new Error('verifyReceipt not exported from /merkle');
+            console.log('CJS: merkle entry OK');
+          "
+
+          # Every remaining package export must resolve from the packed tarball.
+          node -e "
+            for (const subpath of ['receipt-anchor', 'receipt-anchor-client', 'types', 'webhooks', 'retry', 'zk-proof', 'events', 'subscription', 'session/express']) {
+              require('@accensa/sdk/' + subpath);
+              console.log('CJS: ' + subpath + ' entry OK');
+            }
+          "
+
+          # Test ESM import
+          cat > "$SCRATCH/test.mjs" << 'EOF'
+          import { verifyReceipt, attachAccensaHook, createSettleHook } from '@accensa/sdk';
+          import { verifyReceipt as vr } from '@accensa/sdk/merkle';
+
+          if (typeof verifyReceipt !== 'function') throw new Error('verifyReceipt not exported');
+          if (typeof attachAccensaHook !== 'function') throw new Error('attachAccensaHook not exported');
+          if (typeof createSettleHook !== 'function') throw new Error('createSettleHook not exported');
+          if (typeof vr !== 'function') throw new Error('verifyReceipt not exported from /merkle');
+          for (const subpath of ['receipt-anchor', 'receipt-anchor-client', 'types', 'webhooks', 'retry', 'zk-proof', 'events', 'subscription', 'session/express']) {
+            await import('@accensa/sdk/' + subpath);
+            console.log('ESM: ' + subpath + ' entry OK');
+          }
+          console.log('ESM: all entries OK');
+          EOF
+          node "$SCRATCH/test.mjs"
+
+          echo "All import checks passed"
+
+      - name: Install Playwright browsers
+        working-directory: ./apps/web
+        # Firefox as well as chromium: the e2e config runs both projects, and
+        # a missing browser binary fails the job after the server is up.
+        run: pnpm exec playwright install --with-deps chromium firefox
+
+      - name: Run e2e + accessibility suite
+        working-directory: ./apps/web
+        env:
+          JWT_SECRET_KEY: playwright-e2e-secret-key
+        run: pnpm e2e
+
+      - name: Test demo-merchant
+        working-directory: ./apps/demo-merchant
+        run: pnpm test
+
+      - name: Audit workspace dependencies
+        # Dev-dependency audit policy: dev-only advisories are intentionally included
+        # and gate CI alongside production dependencies at the moderate threshold.
+        # Review date: 2026-06-01. Reason: ensure no unmitigated moderate+ vulns enter release chain.
+        run: pnpm audit --audit-level moderate

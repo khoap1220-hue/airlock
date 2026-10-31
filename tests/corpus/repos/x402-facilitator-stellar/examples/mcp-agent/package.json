@@ -1,0 +1,12 @@
+{
+  "name": "example-mcp-agent",
+  "type": "module",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@stellar/stellar-sdk": "^16.2.0"
+  }
+}

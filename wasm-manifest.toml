@@ -1,10 +1,45 @@
 # Airlock's own Wasm manifest, keyed by SHA-256 (ARCHITECTURE.md 7.7). Protected path.
 #
-# No entries yet: this repository commits no Wasm artifacts. Tests generate fixture bytes
-# at run time (`\\0asm` plus a trivial section) and never store a compiled contract.
-#
-# Adding one is a two-step flow: land the manifest change in its own pull request first,
-# then the pull request that adds the file. Policy is read from the trusted base, so a PR
-# carrying both fails until the manifest merge is the base.
+# Committed Wasm artifacts are verified against this trusted ledger.
 
 version = 1
+
+[[wasm]]
+sha256 = "3688130a6441cd1f4b114650c2570af4b85098beb7f045308dbccedec29a227a"
+paths = [
+  "tests/corpus/repos/soroban-cost-profiler/fixtures/dwarf_probe/dwarf_probe_no_debug.wasm",
+]
+origin = "vendored"
+source = "https://github.com/Tollcraft/soroban-cost-profiler"
+build = ""
+note = "Dogfood clean-state corpus fixture (nodebug probe)"
+
+[[wasm]]
+sha256 = "3db0287390162ef78472e42b2a0db100890105437711993818841d3a4afd1f70"
+paths = [
+  "tests/corpus/repos/soroban-cost-profiler/fixtures/dwarf_probe/dwarf_probe.wasm",
+]
+origin = "vendored"
+source = "https://github.com/Tollcraft/soroban-cost-profiler"
+build = ""
+note = "Dogfood clean-state corpus fixture (dwarf probe)"
+
+[[wasm]]
+sha256 = "52be260d09962223c1fadbe9ff36d4d3b0ae1068378e4c664ef2fa09b8765baa"
+paths = [
+  "tests/corpus/repos/soroban-budget-assert/cargo-budget-report/tests/fixtures/exports_min.wasm",
+]
+origin = "vendored"
+source = "https://github.com/Tollcraft/soroban-budget-assert"
+build = ""
+note = "Dogfood clean-state corpus fixture (exports min)"
+
+[[wasm]]
+sha256 = "bea0a7c2422edfc47fd7c3ce5986c19ccf72fe9a3729a0fe693b9df48d80b705"
+paths = [
+  "tests/corpus/repos/x402-facilitator-stellar/test/fixtures/smart_account.wasm",
+]
+origin = "vendored"
+source = "https://github.com/accensa/x402-facilitator-stellar"
+build = ""
+note = "Dogfood clean-state corpus fixture (smart account)"

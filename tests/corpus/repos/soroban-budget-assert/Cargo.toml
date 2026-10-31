@@ -1,0 +1,48 @@
+[workspace]
+members = [
+    "budget-macros",
+    "cargo-budget-report",
+    "amm-pool-contract",
+    "host-function-contract",
+    "bloat-contract",
+]
+resolver = "2"
+
+[package]
+name = "soroban-budget-assert-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/Tollcraft/soroban-budget-assert"
+readme = "README.md"
+
+[lib]
+path = "src/lib.rs"
+
+[dev-dependencies]
+serde_json = "1.0"
+
+[profile.release]
+opt-level = "z"
+overflow-checks = true
+debug = 0
+strip = "symbols"
+debug-assertions = false
+panic = "abort"
+codegen-units = 1
+lto = true
+
+# The workspace release profile above targets small WASM contracts. The CLI
+# binary needs different trade-offs: faster startup and better diagnostics.
+# Only the settings Cargo allows in a per-package override are set here
+# (`panic` and `lto` cannot be overridden per-package). (#500)
+[profile.release.package.cargo-budget-report]
+opt-level = 3
+codegen-units = 16
